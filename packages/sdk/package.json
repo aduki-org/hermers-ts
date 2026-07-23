@@ -17,8 +17,11 @@
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
-  "devDependencies": {
-    "@types/node": "^22.0.0"
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT"
 }
