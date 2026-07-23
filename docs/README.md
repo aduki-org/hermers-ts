@@ -25,7 +25,7 @@ Both SDK packages export a single root client class initialized with your API ke
 import Hermes from '@hermers/sdk';
 
 // Initialize single root client with API key string
-const hermes = new Hermes('534f5dba59db47c51c354b3a242ac55f485d32fc9fb5f713c7d17d396739d1fc');
+const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
 
 // Access services directly as properties:
 const profile = await hermes.user.get();
@@ -39,7 +39,7 @@ const identity = await hermes.whoami();
 import HermesGrpc from '@hermers/grpc';
 
 // Initialize single root gRPC client with API key string
-const grpc = new HermesGrpc('534f5dba59db47c51c354b3a242ac55f485d32fc9fb5f713c7d17d396739d1fc');
+const grpc = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
 
 // Access services directly as properties with auto-filled tenant & owner:
 const mailboxes = await grpc.mail.listMailboxes();

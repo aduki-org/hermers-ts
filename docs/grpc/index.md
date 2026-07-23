@@ -12,7 +12,7 @@ npm install @hermers/grpc
 import HermesGrpc from '@hermers/grpc';
 
 // Default export: root HermesGrpc client class
-const grpc = new HermesGrpc('534f5dba59db47c51c354b3a242ac55f485d32fc9fb5f713c7d17d396739d1fc');
+const grpc = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
 ```
 
 ---

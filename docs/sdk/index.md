@@ -12,7 +12,7 @@ npm install @hermers/sdk
 import Hermes from '@hermers/sdk';
 
 // Default export: root Hermes client class
-const hermes = new Hermes('534f5dba59db47c51c354b3a242ac55f485d32fc9fb5f713c7d17d396739d1fc');
+const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
 ```
 
 ---
@@ -29,7 +29,7 @@ export interface ClientOptions {
 ```ts
 // Initialize with config object
 const hermes = new Hermes({
-  key: '534f5dba59db47c51c354b3a242ac55f485d32fc9fb5f713c7d17d396739d1fc'
+  key: 'hm_live_xxxxxxxxxxxxxxxxxxxxxxxx'
 });
 ```
 
