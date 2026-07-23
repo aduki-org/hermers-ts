@@ -1,0 +1,17 @@
+{
+	"name": "hermes-monorepo",
+	"private": true,
+	"workspaces": [
+		"packages/*"
+	],
+	"scripts": {
+		"build": "npm run build --workspaces",
+		"docs:build": "npx -y typescript --build packages/sdk/tsconfig.json packages/grpc/tsconfig.json",
+		"typecheck": "npm run typecheck --workspaces",
+		"test": "npx -y tsx packages/sdk/tests/client.test.ts && npx -y tsx packages/sdk/tests/crypto.test.ts && npx -y tsx packages/sdk/tests/sdk.test.ts && npx -y tsx packages/sdk/tests/data.test.ts && npx -y tsx packages/sdk/tests/auth.test.ts && npx -y tsx packages/sdk/tests/tenant.test.ts && npx -y tsx packages/sdk/tests/user.test.ts && npx -y tsx packages/sdk/tests/mail.test.ts && npx -y tsx packages/sdk/tests/contacts.test.ts && npx -y tsx packages/sdk/tests/calendar.test.ts && npx -y tsx packages/sdk/tests/events.test.ts && npx -y tsx packages/sdk/tests/scheduling.test.ts && npx -y tsx packages/grpc/tests/client.test.ts && npx -y tsx packages/grpc/tests/grpc.test.ts && npx -y tsx packages/grpc/tests/data.test.ts && npx -y tsx packages/grpc/tests/session.test.ts && npx -y tsx packages/grpc/tests/mail.test.ts && npx -y tsx packages/grpc/tests/contact.test.ts && npx -y tsx packages/grpc/tests/feed.test.ts && npx -y tsx packages/grpc/tests/security.test.ts && npx -y tsx packages/grpc/tests/spam.test.ts && npx -y tsx packages/grpc/tests/storage.test.ts && npx -y tsx packages/grpc/tests/sync.test.ts && npx -y tsx packages/grpc/tests/tier.test.ts && npx -y tsx packages/grpc/tests/usage.test.ts"
+	},
+	"devDependencies": {
+		"@types/node": "^26.1.1",
+		"typescript": "^7.0.2"
+	}
+}
