@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.1.0] - 2026-07-23
+
+### Added
+- **Keywords**: Added NPM discovery keywords (`hermes`, `sdk`, `grpc`, `http`, `rest`, `proto3`, `mail`, `contacts`, `storage`, `tenant`, etc.) across both `@hermers/sdk` and `@hermers/grpc`.
+- **Package Release**: Bumped package versions to `1.1.0` for official NPM organization release under `@hermers`.
+
+---
+
 ## [1.0.0] - 2026-07-23
 
 ### Added

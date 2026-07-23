@@ -1,7 +1,7 @@
 {
   "name": "@hermers/sdk",
-  "version": "1.0.0",
-  "description": "Hermes HTTP SDK client",
+  "version": "1.1.0",
+  "description": "Hermes HTTP SDK REST client library for Node.js & TypeScript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
@@ -13,6 +13,21 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "keywords": [
+    "hermes",
+    "sdk",
+    "http",
+    "rest",
+    "api",
+    "email",
+    "mail",
+    "contacts",
+    "calendar",
+    "events",
+    "scheduling",
+    "tenant",
+    "auth"
+  ],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"

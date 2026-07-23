@@ -1,7 +1,7 @@
 {
   "name": "@hermers/grpc",
-  "version": "1.0.0",
-  "description": "Hermes gRPC client package",
+  "version": "1.1.0",
+  "description": "Hermes gRPC-Web client library for Node.js & TypeScript",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "type": "module",
@@ -13,9 +13,30 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "keywords": [
+    "hermes",
+    "grpc",
+    "grpc-web",
+    "proto3",
+    "email",
+    "mail",
+    "contacts",
+    "storage",
+    "spam",
+    "tier",
+    "usage",
+    "sync",
+    "session"
+  ],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
+  },
+  "files": [
+    "dist"
+  ],
+  "publishConfig": {
+    "access": "public"
   },
   "license": "MIT"
 }

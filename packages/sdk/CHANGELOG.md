@@ -1,5 +1,11 @@
 # Changelog — `@hermers/sdk`
 
+## [1.1.0] - 2026-07-23
+
+### Added
+- Added package keywords for NPM search discovery.
+- Version bump to 1.1.0 for `@hermers` org release.
+
 ## [1.0.0] - 2026-07-23
 
 ### Added
