@@ -1,8 +1,8 @@
-# HTTP SDK Guide (`@hermers/sdk`)
+# `@hermers/sdk` — REST client
 
-Comprehensive guide for `@hermers/sdk` HTTP REST client.
+Stripe/Square-style root client. Pass an API key; call resource methods. Tenant and user come from whoami — never pass hex IDs.
 
-## Installation & Import
+## Install
 
 ```bash
 npm install @hermers/sdk
@@ -11,65 +11,69 @@ npm install @hermers/sdk
 ```ts
 import Hermes from '@hermers/sdk';
 
-// Default export: root Hermes client class
 const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+await hermes.ready();
 ```
 
----
+## Defaults
 
-## Configuration Options
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://hermers.aduki.pro/v1` (`BASE_URL`) |
+| Auth | `Authorization: Key <apiKey>` |
 
-```ts
-export interface ClientOptions {
-  key?: string;
-  token?: string;
-}
-```
+Local override:
 
 ```ts
-// Initialize with config object
-const hermes = new Hermes({
-  key: 'hm_live_xxxxxxxxxxxxxxxxxxxxxxxx'
+const hermes = new Hermes(process.env.HERMERS_API_KEY!, {
+  apiBase: 'http://127.0.0.1:8443/v1',
 });
 ```
 
----
+## Identity
 
-## Service Properties
+| API | Behavior |
+| --- | --- |
+| `ready()` | Awaits `GET /auth/whoami`, caches identity |
+| `whoami()` | Same as `ready()` (returns cache after first success) |
+| `me` | Cached `Identity` or `undefined` until ready |
 
-| Property | Service Class | Description |
-|---|---|---|
-| `hermes.auth` | `Auth` | Login, token refresh, and identity operations |
-| `hermes.tenant` | `Tenant` | Tenant profiles, API key management, members, domains, webhooks |
-| `hermes.user` | `User` | Profile management, preferences, active sessions |
-| `hermes.mail` | `Mail` | Mailboxes, threads, messages, send, move, flags |
-| `hermes.contacts` | `Contacts` | CardDAV contact cards & groups |
-| `hermes.calendar` | `Calendar` | CalDAV calendar collections |
-| `hermes.events` | `Events` | CalDAV events & iCalendar objects |
-| `hermes.feeds` | `Feeds` | External calendar feeds & integrations |
-| `hermes.scheduling` | `Scheduling` | Booking services, appointments, availability slots |
-
----
-
-## Root Methods
-
-### `whoami(): Promise<Identity>`
-Fetches current authenticated identity (cached after first request).
-
-**Return Type:**
 ```ts
 export interface Identity {
-  user?: string;
-  tenant?: string;
+  hex?: string;
+  user: string;
+  tenant: string;
+  owner?: boolean;
+  scopes?: string[];
+  deny?: string[];
+  tier?: string;
   email?: string;
   name?: string;
-  owner?: boolean;
-  raw?: unknown;
 }
 ```
 
-**Example:**
-```ts
-const identity = await hermes.whoami();
-console.log('Current Tenant:', identity.tenant, 'User:', identity.user);
-```
+## Resources
+
+| Property | Notes |
+| --- | --- |
+| `contacts` | CardDAV contacts CRUD (`/user/contacts`) |
+| `mail` | Messages + mailboxes |
+| `keys` | List / create / revoke (create hashes secret client-side) |
+| `user` | Profile, sessions, audits, preferences |
+| `tenant` | Profile, members, domains, quotas, rules, webhooks, usage |
+| `calendar` / `events` | Calendars and events |
+| `feeds` | External calendar feeds |
+| `scheduling` | Booking services and appointments |
+
+There is **no** `hermes.auth` login surface. Use an API key from the dashboard / `hermes.keys.create()`.
+
+## Errors
+
+Failed responses throw `HermesError` with `status`, `code`, `message`, and optional `field` / `requestId`.
+
+## See also
+
+- [Contacts](services/contacts.md) · [Mail](services/mail.md) · [User](services/user.md) · [Tenant](services/tenant.md)
+- [Authentication & keys](services/auth.md)
+- Package README: [`packages/sdk/README.md`](../../packages/sdk/README.md)
+- HTTP API reference: [`guide/http/`](../../guide/http/)

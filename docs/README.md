@@ -1,79 +1,100 @@
-# Hermes Platform SDK Documentation
+# Hermers TypeScript SDKs
 
-Official Node.js & TypeScript SDK monorepo for Hermes platform services.
+Official Node.js / TypeScript clients for Hermes (**`@hermers/*`**).
 
-## Packages
+| Package | Transport | Default endpoint |
+| --- | --- | --- |
+| [`@hermers/sdk`](../packages/sdk) | REST / JSON | `https://hermers.aduki.pro/v1` |
+| [`@hermers/grpc`](../packages/grpc) | Native gRPC (TLS) | `grpc.aduki.pro:443` |
 
-- **`@hermers/sdk`**: Client library wrapping HTTP REST JSON APIs (`https://hermers.aduki.pro/v1`).
-- **`@hermers/grpc`**: Client library wrapping proto3 gRPC-Web APIs (`http://hermers.aduki.pro:8444`).
-
-## Installation
+## Install
 
 ```bash
-npm install @hermers/sdk @hermers/grpc
+npm install @hermers/sdk
+npm install @hermers/grpc
 ```
 
----
-
-## Single Root Client Initialization (Stripe/Square Style)
-
-Both SDK packages export a single root client class initialized with your API key:
-
-### HTTP Client (`@hermers/sdk`)
+## Quickstart
 
 ```ts
 import Hermes from '@hermers/sdk';
 
-// Initialize single root client with API key string
 const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+await hermes.ready(); // GET /auth/whoami — caches user + tenant
 
-// Access services directly as properties:
-const profile = await hermes.user.get();
-const mailboxes = await hermes.mail.mailboxes();
-const identity = await hermes.whoami();
+console.log(hermes.me?.tenant, hermes.me?.user);
+const contacts = await hermes.contacts.list(); // never pass tenant/user hex
 ```
-
-### gRPC Client (`@hermers/grpc`)
 
 ```ts
-import HermesGrpc from '@hermers/grpc';
+import { HermesGrpc } from '@hermers/grpc';
 
-// Initialize single root gRPC client with API key string
-const grpc = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+const client = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+await client.ready(); // SessionService.Whoami
 
-// Access services directly as properties with auto-filled tenant & owner:
-const mailboxes = await grpc.mail.listMailboxes();
-const storage = await grpc.storage.put({ key: 'file.txt', data: new Uint8Array([1, 2, 3]) });
-const identity = await grpc.whoami();
+const { items } = await client.contacts.list();
+client.close();
 ```
 
----
+## Authentication
 
-## Documentation Navigation
+**API key only.** Every REST request sends:
 
-### 1. HTTP SDK (`@hermers/sdk`)
-- [HTTP Overview & Configuration](file:///home/femar/A10B/hermers/docs/sdk/index.md)
-- [Auth Service](file:///home/femar/A10B/hermers/docs/sdk/services/auth.md)
-- [Tenant Service](file:///home/femar/A10B/hermers/docs/sdk/services/tenant.md)
-- [User Service](file:///home/femar/A10B/hermers/docs/sdk/services/user.md)
-- [Mail Service](file:///home/femar/A10B/hermers/docs/sdk/services/mail.md)
-- [Contacts Service](file:///home/femar/A10B/hermers/docs/sdk/services/contacts.md)
-- [Calendar Service](file:///home/femar/A10B/hermers/docs/sdk/services/calendar.md)
-- [Events Service](file:///home/femar/A10B/hermers/docs/sdk/services/events.md)
-- [Scheduling Service](file:///home/femar/A10B/hermers/docs/sdk/services/scheduling.md)
+```http
+Authorization: Key hm_live_…
+```
 
-### 2. gRPC Client (`@hermers/grpc`)
-- [gRPC Overview & Configuration](file:///home/femar/A10B/hermers/docs/grpc/index.md)
-- [Session Service](file:///home/femar/A10B/hermers/docs/grpc/services/session.md)
-- [Mail Service](file:///home/femar/A10B/hermers/docs/grpc/services/mail.md)
-- [Contact Service](file:///home/femar/A10B/hermers/docs/grpc/services/contact.md)
-- [Feed Service](file:///home/femar/A10B/hermers/docs/grpc/services/feed.md)
-- [Security Service](file:///home/femar/A10B/hermers/docs/grpc/services/security.md)
-- [Spam Service](file:///home/femar/A10B/hermers/docs/grpc/services/spam.md)
-- [Storage Service](file:///home/femar/A10B/hermers/docs/grpc/services/storage.md)
-- [Sync Service](file:///home/femar/A10B/hermers/docs/grpc/services/sync.md)
-- [Tier Service](file:///home/femar/A10B/hermers/docs/grpc/services/tier.md)
-- [Usage Service](file:///home/femar/A10B/hermers/docs/grpc/services/usage.md)
+gRPC metadata: `authorization: Key hm_live_…`.
 
-### 3. Data Models & Types
-- [Type Reference & Enums](file:///home/femar/A10B/hermers/docs/types/index.md)
+There are **no** login, password, or JWT refresh helpers in either package. Browser login (`POST /auth/login`) exists on the HTTP API for admin UIs only — not in the SDKs.
+
+On construction each client starts whoami and caches identity. Prefer `await client.ready()` before the first resource call (or rely on lazy await inside resource methods).
+
+## Hosts
+
+| Host | Role |
+| --- | --- |
+| `hermers.aduki.pro` | REST `/v1`, MCP, CardDAV (Cloudflare proxied) |
+| `grpc.aduki.pro:443` | Native gRPC over TLS (DNS-only — not Cloudflare HTTP proxy) |
+
+Override endpoints only for local/dev (see package READMEs).
+
+## Testing
+
+```bash
+npm test                         # unit + live (live skips without a key)
+export HERMERS_API_KEY=hm_live_… # never commit secrets
+npm test                         # live suites hit production
+```
+
+Without `HERMERS_API_KEY`, unit/mocks still run.
+
+## Documentation
+
+### Consumer guides (this site)
+
+- [REST client (`@hermers/sdk`)](sdk/index.md)
+- [gRPC client (`@hermers/grpc`)](grpc/index.md)
+- [Types & enums](types/index.md)
+- [REST cheatsheet](http.md)
+- [gRPC cheatsheet](grpc.md)
+
+### REST resources
+
+- [Contacts](sdk/services/contacts.md) · [Mail](sdk/services/mail.md) · [User](sdk/services/user.md) · [Tenant](sdk/services/tenant.md)
+- [Keys](sdk/services/auth.md) · [Calendar](sdk/services/calendar.md) · [Events](sdk/services/events.md) · [Scheduling](sdk/services/scheduling.md)
+
+### gRPC resources
+
+- [Session](grpc/services/session.md) · [Contact](grpc/services/contact.md) · [Mail](grpc/services/mail.md) · [Feed](grpc/services/feed.md)
+- [Storage](grpc/services/storage.md) · [Sync](grpc/services/sync.md) · [Security](grpc/services/security.md) · [Spam](grpc/services/spam.md)
+- [Tier](grpc/services/tier.md) · [Usage](grpc/services/usage.md)
+
+### API reference (endpoint / proto shapes)
+
+Language-agnostic HTTP and gRPC method docs: [guide/](../guide/) (mirrors monorepo `sdk/`).
+
+### Package READMEs
+
+- [`@hermers/sdk`](../packages/sdk/README.md)
+- [`@hermers/grpc`](../packages/grpc/README.md)

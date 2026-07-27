@@ -1,16 +1,11 @@
-# Changelog — `@hermers/sdk`
+# Changelog
 
-## [1.1.0] - 2026-07-23
+## 2.0.0
 
-### Added
-- Added package keywords for NPM search discovery.
-- Version bump to 1.1.0 for `@hermers` org release.
+Breaking redesign (Stripe/Square-style):
 
-## [1.0.0] - 2026-07-23
-
-### Added
-- **`Hermes` Root Class**: Single root client class exposing `auth`, `tenant`, `user`, `mail`, `contacts`, `calendar`, `events`, `feeds`, and `scheduling`.
-- **API Key String Constructor**: Allows initializing client directly with string: `new Hermes('hm_live_...')`.
-- **Client-Side SHA-256 Key Hashing**: Added `Tenant.createkey()` local SHA-256 hashing and prefix calculation.
-- **Identity Resolution**: Added `whoami()` caching for automatic user and tenant identity resolution.
-- **Service Modules**: Implemented `Auth`, `Tenant`, `User`, `Mail`, `Contacts`, `Calendar`, `Events`, `Feeds`, and `Scheduling` HTTP REST services.
+- Root client: `new Hermes('hm_live_…')` with resource namespaces (`contacts`, `mail`, `keys`, …)
+- API-key auth only — login/password/JWT helpers removed
+- Hardcoded production base `https://hermers.aduki.pro/v1` (`apiBase` override for tests)
+- Typed `HermesError` from API error envelopes
+- Client-side key hashing via `keys.create()`

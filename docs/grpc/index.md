@@ -1,62 +1,76 @@
-# gRPC Client Guide (`@hermers/grpc`)
+# `@hermers/grpc` — native gRPC client
 
-Comprehensive guide for `@hermers/grpc` gRPC-Web client library.
+Native `@grpc/grpc-js` over TLS. Types/stubs are generated from `proto/*.proto` via `ts-proto`.
 
-## Installation & Import
+## Install
 
 ```bash
 npm install @hermers/grpc
 ```
 
 ```ts
-import HermesGrpc from '@hermers/grpc';
+import { HermesGrpc } from '@hermers/grpc';
 
-// Default export: root HermesGrpc client class
-const grpc = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+const client = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+await client.ready();
 ```
 
----
+## Defaults
 
-## Transport & Server Details
+| Setting | Value |
+| --- | --- |
+| Endpoint | `grpc.aduki.pro:443` (`BASE_ENDPOINT`) |
+| Transport | TLS / HTTP2 (not grpc-web, not plaintext in production) |
+| Auth | metadata `authorization: Key <apiKey>` |
 
-- **Default Endpoint**: `http://hermers.aduki.pro:8444` (`BASE_ENDPOINT` constant).
-- **Transport**: Plaintext HTTP/2 (`application/grpc-web+json`).
-- **Authorization Metadata**: Transmitted as `authorization: Key <raw_api_key>` or `authorization: Bearer <jwt>`.
-- **Eager `whoami()` Resolution**: Client triggers eager identity fetch on construction so `tenant` and `user`/`owner` fields are auto-filled when omitted in service methods.
-
----
-
-## Service Properties & Mapped gRPC Packages
-
-| Property | Service Class | gRPC Package | gRPC Service Name |
-|---|---|---|---|
-| `grpc.session` | `SessionService` | `hermes.session` | `SessionService` |
-| `grpc.mail` | `MailService` | `hermes.mail` | `MailService` |
-| `grpc.contact` | `ContactService` | `hermes.contact` | `ContactService` |
-| `grpc.feed` | `FeedService` | `hermes.feeds` | `FeedService` |
-| `grpc.security` | `SecurityService` | `hermes.security` | `SecurityService` |
-| `grpc.spam` | `SpamService` | `hermes.spam` | `SpamService` |
-| `grpc.storage` | `StorageService` | `hermes.storage` | `StorageService` |
-| `grpc.sync` | `SyncService` | `hermes.sync` | `SyncService` |
-| `grpc.tier` | `TierService` | `hermes.tier` | `TierService` |
-| `grpc.usage` | `UsageService` | `hermes.usage` | `UsageService` |
-
----
-
-## Root Methods
-
-### `whoami(): Promise<Identity>`
-
-Executes `rpc Whoami` against `hermes.session.SessionService`.
-
-- **Return Type:** `Promise<Identity>`
+Local override:
 
 ```ts
-export interface Identity {
-  user?: string;
-  tenant?: string;
-  email?: string;
-  name?: string;
-  owner?: boolean;
-}
+const client = new HermesGrpc(process.env.HERMERS_API_KEY!, {
+  endpoint: '127.0.0.1:8444',
+  insecure: true, // plaintext h2c for local only
+});
 ```
+
+Always call `client.close()` when finished.
+
+## Identity
+
+| API | Behavior |
+| --- | --- |
+| `ready()` | Awaits `SessionService.Whoami`, caches identity |
+| `whoami()` | Same (cached after first success) |
+| `me` | Cached `Identity` or `undefined` until ready |
+
+Resource methods that need tenant/owner call `requireTenant()` / `requireUser()` internally — callers never pass those hex fields.
+
+## Resources
+
+| Property | Proto service |
+| --- | --- |
+| `contacts` | `hermes.contact.ContactService` |
+| `mail` | `hermes.mail.MailService` |
+| `feeds` | `hermes.feeds.FeedService` |
+| `storage` | `hermes.storage.StorageService` |
+| `sync` | `hermes.sync.SyncService` |
+| `security` | `hermes.security.SecurityService` |
+| `spam` | `hermes.spam.SpamService` |
+| `tier` | `hermes.tier.TierService` |
+| `usage` | `hermes.usage.UsageService` |
+| `session` | `hermes.session.SessionService` — whoami / load / revoke / list only |
+
+Login / Issue / Refresh / Patch RPCs exist on the server but are **not** exposed.
+
+## Regenerating stubs
+
+From `sdks/ts` (requires monorepo `proto/` and `protoc`):
+
+```bash
+npm run generate
+```
+
+## See also
+
+- [Session](services/session.md) · [Contact](services/contact.md) · [Mail](services/mail.md)
+- Package README: [`packages/grpc/README.md`](../../packages/grpc/README.md)
+- gRPC API reference: [`guide/grpc/`](../../guide/grpc/)

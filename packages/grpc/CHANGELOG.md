@@ -1,15 +1,11 @@
-# Changelog — `@hermers/grpc`
+# Changelog
 
-## [1.1.0] - 2026-07-23
+## 2.0.0
 
-### Added
-- Added package keywords for NPM search discovery.
-- Version bump to 1.1.0 for `@hermers` org release.
+Breaking redesign (Stripe/Square-style):
 
-## [1.0.0] - 2026-07-23
-
-### Added
-- **`HermesGrpc` Root Class**: Single root gRPC client class exposing `session`, `mail`, `contact`, `feed`, `security`, `spam`, `storage`, `sync`, `tier`, and `usage`.
-- **Default Endpoint**: Configured default endpoint to `http://hermers.aduki.pro:8444`.
-- **Eager Identity Fetching**: Automatically triggers `SessionService.Whoami` on constructor initialization and auto-fills omitted `tenant` and `owner` parameters.
-- **10 gRPC Services**: Implemented full RPC bindings for `SessionService`, `MailService`, `ContactService`, `FeedService`, `SecurityService`, `SpamService`, `StorageService`, `SyncService`, `TierService`, and `UsageService`.
+- Root client: `new HermesGrpc('hm_live_…')` with resource namespaces (`contacts`, `mail`, `storage`, …)
+- Native `@grpc/grpc-js` over TLS to `grpc.aduki.pro:443` (replaces fake grpc-web JSON fetch)
+- Types/stubs generated from `proto/*.proto` via `ts-proto` (`npm run generate`)
+- API-key metadata only — session login/password/refresh RPCs not exposed
+- Typed `HermesGrpcError`

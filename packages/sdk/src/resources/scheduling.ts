@@ -1,0 +1,107 @@
+import type { HttpClient } from '../http/client.js';
+import type {
+  Appointment,
+  Availability,
+  Guest,
+  ListQuery,
+  Override,
+  Page,
+  Service,
+  Window,
+} from '../types/index.js';
+
+/** Booking + appointments + availability. */
+export class SchedulingResource {
+  constructor(private readonly http: HttpClient) {}
+
+  view(slug: string): Promise<Service> {
+    return this.http.get<Service>(`/book/${slug}`);
+  }
+
+  book(
+    slug: string,
+    data: { name: string; email: string; start: string; end: string }
+  ): Promise<{ appt: Appointment; guest: Guest }> {
+    return this.http.post<{ appt: Appointment; guest: Guest }>(`/book/${slug}`, data);
+  }
+
+  guest(token: string): Promise<{ appt: Appointment; guest: Guest }> {
+    return this.http.get<{ appt: Appointment; guest: Guest }>(`/book/guest/${token}`);
+  }
+
+  cancelGuest(token: string): Promise<{ status: string }> {
+    return this.http.post<{ status: string }>(`/book/guest/${token}/cancel`);
+  }
+
+  createAppointment(data: {
+    service: string;
+    start: string;
+    end: string;
+    timezone?: string;
+    uid?: string;
+    method?: string;
+    event?: string;
+    location?: string;
+    notes?: string;
+    rescheduled?: string;
+    meta?: Record<string, unknown>;
+  }): Promise<Appointment> {
+    return this.http.post<Appointment>('/user/appointments', data);
+  }
+
+  appointments(query?: ListQuery): Promise<Page<Appointment>> {
+    return this.http.get<Page<Appointment>>('/user/appointments', { query });
+  }
+
+  retrieveAppointment(hex: string): Promise<Appointment> {
+    return this.http.get<Appointment>(`/user/appointments/${hex}`);
+  }
+
+  cancelAppointment(hex: string): Promise<{ ok: boolean }> {
+    return this.http.patch<{ ok: boolean }>(`/user/appointments/${hex}/cancel`, {});
+  }
+
+  deleteAppointment(hex: string): Promise<{ ok: boolean }> {
+    return this.http.delete<{ ok: boolean }>(`/user/appointments/${hex}`);
+  }
+
+  createService(data: {
+    name: string;
+    slug: string;
+    duration: number;
+    buffer?: number;
+    notice?: number;
+    horizon?: number;
+    increment?: number;
+    max?: number;
+    location?: Record<string, unknown>;
+    questions?: string[];
+    meta?: Record<string, unknown>;
+  }): Promise<Service> {
+    return this.http.post<Service>('/user/services', data);
+  }
+
+  services(): Promise<Service[]> {
+    return this.http.get<Service[]>('/user/services');
+  }
+
+  retrieveService(hex: string): Promise<Service> {
+    return this.http.get<Service>(`/user/services/${hex}`);
+  }
+
+  deleteService(hex: string): Promise<void> {
+    return this.http.delete<void>(`/user/services/${hex}`);
+  }
+
+  windows(): Promise<Window[]> {
+    return this.http.get<Window[]>('/user/windows');
+  }
+
+  overrides(): Promise<Override[]> {
+    return this.http.get<Override[]>('/user/overrides');
+  }
+
+  availability(start: string, end: string): Promise<Availability> {
+    return this.http.get<Availability>(`/user/availability/${start}/${end}`);
+  }
+}

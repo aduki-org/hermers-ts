@@ -1,0 +1,11 @@
+{
+  "hex": "A0SDFF10B7035B677847",
+  "user": "U0XC4DA9167DAD0",
+  "tenant": "T0X9E68DD4B15C6",
+  "owner": false,
+  "scopes": ["user.mail.**","user.contacts.**","user.mailboxes.read","user.events.read.self","user.user.**","tenant.mail.**","tenant.contacts.**","tenant.mailboxes.read","tenant.events.read.self"],
+  "deny": [],
+  "tier": "free",
+  "ip": "",
+  "agent": ""
+}

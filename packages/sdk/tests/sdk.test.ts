@@ -1,31 +1,114 @@
-import { Auth, Calendar, Client, Contacts, Events, Feeds, Mail, Scheduling, Tenant, User } from '../src/index.js';
+import assert from 'node:assert/strict';
+import { describe, it } from 'node:test';
+import Hermes, {
+  BASE_URL,
+  HermesError,
+  generateKey,
+  hashKey,
+  prefixKey,
+} from '../src/index.js';
+import { createHash, randomBytes } from 'node:crypto';
 
-async function testSdk() {
-  const client = new Client({ key: 'hm_live_testkey' });
+/**
+ * Unit tests — mocked fetch. Always run.
+ * Live integration lives in `live.test.ts` (requires HERMERS_API_KEY).
+ */
+describe('@hermers/sdk unit', () => {
+  it('defaults to production REST base and requires an API key', () => {
+    const hermes = new Hermes('hm_live_testkey', {
+      fetch: async () =>
+        new Response(
+          JSON.stringify({
+            hex: 'A0S',
+            user: 'U0X',
+            tenant: 'T0X',
+            owner: true,
+            scopes: [],
+            deny: [],
+            tier: 'free',
+          }),
+          { status: 200 }
+        ),
+    });
+    assert.equal(hermes.http.apiBase, BASE_URL);
+    assert.equal(BASE_URL, 'https://hermers.aduki.pro/v1');
+    assert.throws(() => new Hermes(''), /API key is required/);
+  });
 
-  const auth = new Auth(client);
-  const tenant = new Tenant(client);
-  const user = new User(client);
-  const mail = new Mail(client);
-  const contacts = new Contacts(client);
-  const calendar = new Calendar(client);
-  const events = new Events(client);
-  const feeds = new Feeds(client);
-  const scheduling = new Scheduling(client);
+  it('hashes API keys client-side', () => {
+    const key = generateKey();
+    assert.match(key, /^hm_live_[0-9a-f]{64}$/);
+    assert.equal(prefixKey(key), key.slice(0, 16));
+    assert.equal(hashKey(key), createHash('sha256').update(key).digest('hex'));
+  });
 
-  console.log('SDK initialized successfully with all services:');
-  console.log('- Auth:', typeof auth.login);
-  console.log('- Tenant:', typeof tenant.get);
-  console.log('- User:', typeof user.get);
-  console.log('- Mail:', typeof mail.inbox);
-  console.log('- Contacts:', typeof contacts.list);
-  console.log('- Calendar:', typeof calendar.list);
-  console.log('- Events:', typeof events.list);
-  console.log('- Feeds:', typeof feeds.list);
-  console.log('- Scheduling:', typeof scheduling.services);
-}
+  it('throws HermesError from envelope', async () => {
+    const fetchMock: typeof fetch = async (input) => {
+      const url = String(input);
+      if (url.includes('/auth/whoami')) {
+        return new Response(
+          JSON.stringify({
+            hex: 'A0S',
+            user: 'U0X',
+            tenant: 'T0X',
+            owner: true,
+            scopes: [],
+            deny: [],
+            tier: 'free',
+          }),
+          { status: 200 }
+        );
+      }
+      return new Response(
+        JSON.stringify({ error: { code: 'not_found', message: 'missing', field: 'hex' } }),
+        { status: 404, statusText: 'Not Found' }
+      );
+    };
+    const hermes = new Hermes('hm_live_abc', {
+      apiBase: 'https://example.test/v1',
+      fetch: fetchMock,
+    });
+    await assert.rejects(() => hermes.contacts.retrieve('x'), (err: unknown) => {
+      assert.ok(err instanceof HermesError);
+      assert.equal(err.code, 'not_found');
+      return true;
+    });
+  });
 
-testSdk().catch((err) => {
-  console.error('Test error:', err);
-  process.exit(1);
+  it('create key posts hash+prefix only', async () => {
+    const bodies: unknown[] = [];
+    const fetchMock: typeof fetch = async (input, init) => {
+      if (String(input).includes('/auth/whoami')) {
+        return new Response(
+          JSON.stringify({
+            hex: 'A0S',
+            user: 'U0X',
+            tenant: 'T0X',
+            owner: true,
+            scopes: [],
+            deny: [],
+            tier: 'free',
+          }),
+          { status: 200 }
+        );
+      }
+      bodies.push(JSON.parse(String(init?.body)));
+      return new Response(JSON.stringify({ hex: 'k1' }), { status: 200 });
+    };
+    const hermes = new Hermes('hm_live_admin', {
+      apiBase: 'https://example.test/v1',
+      fetch: fetchMock,
+    });
+    const fixed = `hm_live_${randomBytes(32).toString('hex')}`;
+    const created = await hermes.keys.create({
+      name: 'ci',
+      scopes: ['contacts:read'],
+      key: fixed,
+    });
+    assert.equal(created.key, fixed);
+    const body = bodies[0] as Record<string, string>;
+    assert.equal(body.hash, hashKey(fixed));
+    assert.equal(body.prefix, prefixKey(fixed));
+    assert.ok(!('key' in body));
+  });
 });

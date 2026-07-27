@@ -6,44 +6,16 @@ export interface Page<T> {
   pages?: number;
 }
 
-export interface ApiError {
-  error: {
-    code: string;
-    message: string;
-    field?: string;
-    request?: string;
-  };
-}
-
-export interface ClientOptions {
-  key?: string;
-  token?: string;
-}
-
-export interface RequestOptions {
-  headers?: Record<string, string>;
-  query?: Record<string, string | number | boolean | undefined>;
-  idempotency?: string;
-  match?: string;
-}
-
-export interface Token {
-  token: string;
-  refresh: string;
-  expires: string;
-}
-
-export interface Session {
+export interface UserProfile {
   hex: string;
-  ip?: string;
-  agent?: string;
-  device?: Record<string, unknown>;
-  location?: Record<string, unknown>;
-  seen?: string;
-  expires?: string;
+  email: string;
+  name: string;
+  phone?: string;
+  avatar?: string;
+  state?: string;
+  totp?: boolean;
+  meta?: Record<string, unknown>;
   created: string;
-  user: Record<string, unknown>;
-  total?: number;
 }
 
 export interface TenantProfile {
@@ -64,7 +36,7 @@ export interface TenantProfile {
   storage: number;
 }
 
-export interface Tenant {
+export interface TenantSummary {
   hex: string;
   name: string;
   slug: string;
@@ -139,6 +111,21 @@ export interface RuleDetail extends Rule {
   meta: Record<string, unknown>;
 }
 
+export interface ApiKey {
+  hex: string;
+  name: string;
+  prefix?: string;
+  key?: string;
+  scopes: string[];
+  active?: boolean;
+  expires?: string;
+  last?: string;
+  created: string;
+  tenant?: Record<string, unknown>;
+  user?: Record<string, unknown>;
+  total?: number;
+}
+
 export interface Webhook {
   hex: string;
   url: string;
@@ -178,27 +165,6 @@ export interface Security {
   tlsa: Array<{ host: string; port: number; records: Record<string, unknown>; expires: string }>;
   bimi: Array<{ domain: string; location?: string; vmc?: string; expires: string }>;
   reports: Array<{ hex: string; kind: string; domain: string; period: string; received: string }>;
-}
-
-export interface UserProfile {
-  hex: string;
-  email: string;
-  name: string;
-  phone?: string;
-  avatar?: string;
-  state?: string;
-  totp?: boolean;
-  meta?: Record<string, unknown>;
-  created: string;
-}
-
-export interface Key {
-  hex: string;
-  name: string;
-  key: string;
-  scopes: string[];
-  created: string;
-  last?: string;
 }
 
 export interface PreferenceDetail {
@@ -385,3 +351,24 @@ export interface Feed {
   active: boolean;
   last?: string;
 }
+
+export interface Session {
+  hex: string;
+  ip?: string;
+  agent?: string;
+  device?: Record<string, unknown>;
+  location?: Record<string, unknown>;
+  seen?: string;
+  expires?: string;
+  created: string;
+  user: Record<string, unknown>;
+  total?: number;
+}
+
+export type ListQuery = {
+  after?: string;
+  limit?: number;
+  page?: number;
+  group?: string;
+  search?: string;
+};

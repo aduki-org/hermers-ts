@@ -1,42 +1,47 @@
 {
   "name": "@hermers/grpc",
-  "version": "1.1.0",
-  "description": "Hermes gRPC-Web client library for Node.js & TypeScript",
+  "version": "2.0.0",
+  "description": "Official Hermes gRPC SDK — native TLS client generated from proto3 (API key auth)",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "generate": "node ../../scripts/generate-grpc.mjs",
+    "test": "tsx --test tests/grpc.test.ts tests/live.test.ts",
+    "test:unit": "tsx --test tests/grpc.test.ts",
+    "test:live": "tsx --test tests/live.test.ts"
   },
   "keywords": [
     "hermes",
+    "hermers",
     "grpc",
-    "grpc-web",
     "proto3",
     "email",
-    "mail",
     "contacts",
-    "storage",
-    "spam",
-    "tier",
-    "usage",
-    "sync",
-    "session"
+    "storage"
   ],
-  "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit"
+  "dependencies": {
+    "@bufbuild/protobuf": "^2.13.0",
+    "@grpc/grpc-js": "^1.14.4"
   },
-  "files": [
-    "dist"
-  ],
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
 }

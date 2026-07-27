@@ -8,7 +8,9 @@ on:
     paths:
       - 'docs/**'
       - 'guide/**'
-      - 'packages/**'
+      - 'packages/**/README.md'
+      - 'README.md'
+      - 'scripts/build-docs.mjs'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -40,11 +42,14 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
-      - name: Build TypeScript packages
-        run: npm run build
+      - name: Build documentation site
+        run: npm run docs:build
 
-      - name: Run test suite
-        run: npm test
+      - name: Check relative doc links
+        run: npm run docs:check
+
+      - name: Unit tests (no live key required)
+        run: npm run test:unit
 
       - name: Setup GitHub Pages
         uses: actions/configure-pages@v5
@@ -52,7 +57,7 @@ jobs:
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs'
+          path: './site'
 
       - name: Deploy to GitHub Pages
         id: deployment

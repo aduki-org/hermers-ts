@@ -1,42 +1,43 @@
 {
   "name": "@hermers/sdk",
-  "version": "1.1.0",
-  "description": "Hermes HTTP SDK REST client library for Node.js & TypeScript",
+  "version": "2.0.0",
+  "description": "Official Hermes REST SDK — Stripe-style TypeScript client (API key auth)",
+  "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "type": "module",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.js",
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/index.js"
     }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "tsx --test tests/sdk.test.ts tests/live.test.ts",
+    "test:unit": "tsx --test tests/sdk.test.ts",
+    "test:live": "tsx --test tests/live.test.ts"
   },
   "keywords": [
     "hermes",
+    "hermers",
     "sdk",
-    "http",
     "rest",
     "api",
     "email",
-    "mail",
     "contacts",
-    "calendar",
-    "events",
-    "scheduling",
-    "tenant",
-    "auth"
-  ],
-  "scripts": {
-    "build": "tsc",
-    "typecheck": "tsc --noEmit"
-  },
-  "files": [
-    "dist"
+    "mail"
   ],
   "publishConfig": {
     "access": "public"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
 }

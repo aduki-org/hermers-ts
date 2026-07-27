@@ -1,85 +1,40 @@
-# Auth Service (`@hermers/sdk`)
+# Authentication & API keys
 
-Package: `@hermers/sdk`  
-Property: `hermes.auth`
+`@hermers/sdk` has **no** `auth.login` / password / JWT refresh surface.
 
-Provides authentication and token management methods.
-
----
-
-## Methods & Signatures
-
-### `login(credentials: { email: string; password: string }): Promise<Token>`
-
-Authenticates with email and password to receive JWT credentials.
-
-- **Parameters:**
-  - `credentials.email` (`string`): Valid email address.
-  - `credentials.password` (`string`): Non-empty password string.
-- **Return Type:** `Promise<Token>`
+## API key
 
 ```ts
-export interface Token {
-  token: string;
-  refresh: string;
-  expires: string;
-}
+import Hermes from '@hermers/sdk';
+
+const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+await hermes.ready(); // GET /auth/whoami
 ```
 
-- **Example:**
+Header on every request:
+
+```http
+Authorization: Key hm_live_…
+```
+
+## Creating keys
+
 ```ts
-const tokenData = await hermes.auth.login({
-  email: 'owner@aduki.pro',
-  password: 'Owner!234'
+const { hex, key } = await hermes.keys.create({
+  name: 'ci-bot',
+  scopes: ['contacts:read', 'mail:read'],
 });
-console.log('Access Token:', tokenData.token);
+// `key` is the raw secret — show once. Server only stores SHA-256(hash) + prefix.
 ```
 
----
+Helpers: `generateKey()`, `hashKey()`, `prefixKey()` from `@hermers/sdk`.
 
-### `whoami(): Promise<Identity>`
-
-Fetches profile details for the currently authenticated credential.
-
-- **Return Type:** `Promise<Identity>`
+## Whoami
 
 ```ts
-export interface Identity {
-  user?: string;
-  tenant?: string;
-  email?: string;
-  name?: string;
-  owner?: boolean;
-}
+const id = await hermes.whoami();
+// id.user, id.tenant, id.owner, id.scopes, id.tier
+hermes.me; // same cache
 ```
 
-- **Example:**
-```ts
-const identity = await hermes.auth.whoami();
-```
-
----
-
-### `logout(): Promise<void>`
-
-Invalidates the current session token.
-
-- **Return Type:** `Promise<void>`
-
-```ts
-await hermes.auth.logout();
-```
-
----
-
-### `refresh(token: string): Promise<Token>`
-
-Exchanges a refresh token for a new access token.
-
-- **Parameters:**
-  - `token` (`string`): Valid refresh token.
-- **Return Type:** `Promise<Token>`
-
-```ts
-const newToken = await hermes.auth.refresh(tokenData.refresh);
-```
+HTTP shape: see [guide/http/auth.md](../../guide/http/auth.md) (`GET /auth/whoami`).

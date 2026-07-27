@@ -1,53 +1,84 @@
 # `@hermers/grpc`
 
-Official Hermes gRPC-Web client package for Node.js and TypeScript.
+Official **Hermes gRPC** client for Node.js and TypeScript. Native gRPC over TLS — types and stubs are **generated from** `proto/*.proto` via `ts-proto` + `@grpc/grpc-js`.
 
-## Installation
+## Install
 
 ```bash
 npm install @hermers/grpc
 ```
 
----
-
 ## Quickstart
 
-Initialize a single root gRPC client instance passing your API key string:
-
 ```ts
-import HermesGrpc from '@hermers/grpc';
+import { HermesGrpc } from '@hermers/grpc';
 
-// Initialize single root gRPC client (Default endpoint: http://hermers.aduki.pro:8444)
-const grpc = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+const client = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+await client.ready(); // SessionService.Whoami — caches user + tenant
 
-// Auto-fills tenant & owner parameters from cached identity when omitted:
-const mailboxes = await grpc.mail.listMailboxes();
-const blob = await grpc.storage.put({ key: 'document.pdf', data: pdfBuffer });
-const usage = await grpc.usage.incr({ metric: 'sends' });
-const identity = await grpc.whoami();
+console.log(client.me?.tenant, client.me?.user);
+
+const { items } = await client.contacts.list(); // no tenant/user args
+const mailboxes = await client.mail.listMailboxes();
+client.close();
 ```
 
----
+Auth is **API key only**. Metadata on every call:
 
-## Services Overview
+```text
+authorization: Key hm_live_…
+```
 
-| Service | Property | gRPC Package | Description |
-|---|---|---|---|
-| `SessionService` | `grpc.session` | `hermes.session` | Session issue, refresh, load, revoke, patch, whoami |
-| `MailService` | `grpc.mail` | `hermes.mail` | Mailboxes, messages, send, move, flags, expunge |
-| `ContactService` | `grpc.contact` | `hermes.contact` | CardDAV contacts & sync |
-| `FeedService` | `grpc.feed` | `hermes.feeds` | External calendar feeds & integrations |
-| `SecurityService` | `grpc.security` | `hermes.security` | Domain security protocol status checks |
-| `SpamService` | `grpc.spam` | `hermes.spam` | Spam classification & user reporting |
-| `StorageService` | `grpc.storage` | `hermes.storage` | Binary blob upload & streaming download |
-| `SyncService` | `grpc.sync` | `hermes.sync` | Delta sync for contacts and mailboxes |
-| `TierService` | `grpc.tier` | `hermes.tier` | Subscription tier limits & plan changes |
-| `UsageService` | `grpc.usage` | `hermes.usage` | Real-time metric increments, checks & resets |
+Login/password/JWT refresh RPCs are not exposed.
 
----
+## Defaults
 
-## Features
+| Setting | Value |
+| --- | --- |
+| Endpoint | `grpc.aduki.pro:443` (TLS / HTTP2) |
+| Auth | metadata `authorization: Key <apiKey>` |
 
-- **Eager Identity Fetching**: Automatically resolves `whoami()` on construction to auto-fill omitted `tenant` and `owner` parameters across service calls.
-- **Port 8444 Plaintext HTTP/2**: Connected directly to `http://hermers.aduki.pro:8444`.
-- **Zero Third-Party Transport Overhead**: Light, high-performance fetch-based gRPC-Web transport.
+Override only for local/dev:
+
+```ts
+const client = new HermesGrpc(process.env.HERMERS_API_KEY!, {
+  endpoint: '127.0.0.1:8444',
+  insecure: true, // plaintext h2c
+});
+```
+
+## Resources
+
+| Property | Proto service |
+| --- | --- |
+| `contacts` | `hermes.contact.ContactService` |
+| `mail` | `hermes.mail.MailService` |
+| `feeds` | `hermes.feeds.FeedService` |
+| `storage` | `hermes.storage.StorageService` |
+| `sync` | `hermes.sync.SyncService` |
+| `security` | `hermes.security.SecurityService` |
+| `spam` | `hermes.spam.SpamService` |
+| `tier` | `hermes.tier.TierService` |
+| `usage` | `hermes.usage.Usageervice` *(proto service name)* |
+| `session` | `hermes.session.SessionService` (whoami / load / revoke / list only) |
+
+Tenant and user IDs are always taken from the whoami cache — callers never pass hex ids.
+
+## Regenerating types
+
+From `sdks/ts`:
+
+```bash
+npm run generate
+```
+
+This runs `protoc` + `ts-proto` against `../../proto/*.proto` into `packages/grpc/src/generated/`.
+
+## Live tests
+
+```bash
+export HERMERS_API_KEY=hm_live_…
+npm test
+```
+
+Without the env var, live suites skip; unit tests still run.

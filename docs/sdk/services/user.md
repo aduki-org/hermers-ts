@@ -1,57 +1,25 @@
-# User Service (`@hermers/sdk`)
+# User (`hermes.user`)
 
-Package: `@hermers/sdk`  
-Property: `hermes.user`
+Authenticated user profile under `/user`.
 
-Manages current user profile, preferences, and active authentication sessions.
+## Methods
 
----
-
-## Methods & Signatures
-
-### `get(): Promise<UserProfile>`
-
-Fetches the profile details for the authenticated user.
-
-- **Return Type:** `Promise<UserProfile>`
+| Method | HTTP |
+| --- | --- |
+| `retrieve()` | `GET /user` |
+| `lookupByEmail(email)` | `POST /user/lookup/email` |
+| `updateInfo({ name? })` | `PATCH /user/info` |
+| `updateEmail(email)` | `PATCH /user/email` |
+| `updatePhone(phone)` | `PATCH /user/phone` |
+| `updateMeta(meta)` | `PATCH /user/meta` |
+| `updateAvatar(avatar)` | `PATCH /user/avatar` |
+| `activeSessions(query?)` | `GET /user/sessions/active` |
+| `audits(query?)` | `GET /user/audits` |
+| `updatePreferences(section, data)` | `PATCH /user/preferences/{section}` |
 
 ```ts
-export interface UserProfile {
-  hex: string;
-  email: string;
-  name: string;
-  phone?: string;
-  avatar?: string;
-  state?: string;
-  totp?: boolean;
-  created: string;
-}
+const profile = await hermes.user.retrieve();
+await hermes.user.updateInfo({ name: 'Ada' });
 ```
 
----
-
-### `update(data: { name?: string; phone?: string; avatar?: string }): Promise<UserProfile>`
-
-Updates user profile fields.
-
-- **Parameters:**
-  - `data.name` (`string`, optional): Display name.
-  - `data.phone` (`string`, optional): Phone number.
-  - `data.avatar` (`string`, optional): Avatar URL.
-- **Return Type:** `Promise<UserProfile>`
-
----
-
-### `preferences(): Promise<PreferenceDetail>`
-
-Retrieves user preferences and configuration settings.
-
-- **Return Type:** `Promise<PreferenceDetail>`
-
----
-
-### `sessions(): Promise<{ items: Session[] }>`
-
-Lists active sessions for the user across devices.
-
-- **Return Type:** `Promise<{ items: Session[] }>`
+API reference: [guide/http/user/index.md](../../../guide/http/user/index.md).

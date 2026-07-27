@@ -1,51 +1,74 @@
 # `@hermers/sdk`
 
-Official Hermes HTTP REST SDK client for Node.js and TypeScript.
+Official **Hermes REST** client for Node.js and TypeScript. Stripe/Square-style API — pass an API key and call resource methods.
 
-## Installation
+## Install
 
 ```bash
 npm install @hermers/sdk
 ```
 
----
-
 ## Quickstart
-
-Initialize a single root client instance passing your API key string:
 
 ```ts
 import Hermes from '@hermers/sdk';
 
-// Initialize single root client
 const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
+await hermes.ready(); // GET /auth/whoami — caches user + tenant
 
-// Access services directly as properties:
-const profile = await hermes.user.get();
-const mailboxes = await hermes.mail.mailboxes();
-const contactList = await hermes.contacts.list();
-const identity = await hermes.whoami();
+console.log(hermes.me?.tenant, hermes.me?.user);
+
+const contacts = await hermes.contacts.list({ limit: 50 }); // no tenant/user args
+const profile = await hermes.user.retrieve();
+const mailboxes = await hermes.mail.listMailboxes();
 ```
 
----
+Auth is **API key only**. Every request sends:
 
-## Services Overview
+```http
+Authorization: Key hm_live_…
+```
 
-| Service | Property | Key Capabilities |
-|---|---|---|
-| `Auth` | `hermes.auth` | Login, identity resolution, token refresh |
-| `Tenant` | `hermes.tenant` | Tenant profile, client-side SHA-256 API key generation (`createkey`), members, domains, webhooks |
-| `User` | `hermes.user` | User profile, preferences, active session list |
-| `Mail` | `hermes.mail` | Mailbox list, inbox messages, thread details, message send & move |
-| `Contacts` | `hermes.contacts` | CardDAV contact cards & groups |
-| `Calendar` | `hermes.calendar` | CalDAV calendar collections |
-| `Events` | `hermes.events` | iCalendar event objects & scheduling |
-| `Scheduling` | `hermes.scheduling` | Public booking services, appointments, availability slots |
+There are no login/password helpers in this package.
 
----
+## Defaults
 
-## Features
+| Setting | Value |
+| --- | --- |
+| Base URL | `https://hermers.aduki.pro/v1` |
+| Auth | `Authorization: Key <apiKey>` |
 
-- **Client-Side SHA-256 Key Hashing**: `Tenant.createkey()` generates a raw API key, computes SHA-256 hash & prefix locally, registers with the server, and returns `{ hex, key }`.
-- **Identity Auto-Filling**: Built-in `whoami()` caching auto-fills tenant and user context.
-- **Full Type Safety**: Clean 1-word direct service exports and complete DTO typings.
+Override the base URL only for local/dev tests:
+
+```ts
+const hermes = new Hermes(process.env.HERMERS_API_KEY!, {
+  apiBase: 'http://127.0.0.1:8443/v1',
+});
+```
+
+## Resources
+
+| Property | Coverage |
+| --- | --- |
+| `contacts` | CardDAV contacts CRUD |
+| `mail` | Messages + mailboxes |
+| `keys` | List / create / revoke API keys (create hashes the secret client-side) |
+| `user` | Profile, sessions, audits, preferences |
+| `tenant` | Tenant profile, members, domains, quotas, rules, webhooks, usage |
+| `calendar` / `events` | Calendars and events |
+| `feeds` | External calendar feeds |
+| `scheduling` | Booking services and appointments |
+
+## Errors
+
+Failed responses throw `HermesError` with `status`, `code`, `message`, and optional `field` / `requestId`.
+
+## Live tests
+
+```bash
+# From sdks/ts — key must NOT be committed
+export HERMERS_API_KEY=hm_live_…   # or: set -a && source .env.local && set +a
+npm test
+```
+
+Without `HERMERS_API_KEY`, live suites skip; unit/mocks still run.

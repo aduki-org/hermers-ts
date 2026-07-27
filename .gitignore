@@ -5,6 +5,7 @@ node_modules/
 # Build outputs
 dist/
 build/
+site/
 *.tsbuildinfo
 
 # Logs & temp
@@ -20,8 +21,8 @@ yarn-error.log*
 .idea/
 *.swp
 
-# Environment
+# Environment / secrets (never commit)
 .env
+.env.*
 .env.local
-.vscode
-guide
+!.env.example

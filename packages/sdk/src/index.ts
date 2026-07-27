@@ -1,18 +1,18 @@
-import { Hermes } from './client.js';
-import { BASE_URL, Client } from './utils/client.js';
-import { Auth } from './services/auth.js';
-import { Tenant } from './services/tenant.js';
-import { User } from './services/user.js';
-import { Mail } from './services/mail.js';
-import { Contacts } from './services/contacts.js';
-import { Calendar } from './services/calendar.js';
-import { Events } from './services/events.js';
-import { Feeds } from './services/feeds.js';
-import { Scheduling } from './services/scheduling.js';
+export { Hermes } from './hermes.js';
+export { default } from './hermes.js';
+export { BASE_URL, type HermesOptions } from './config.js';
+export { HermesError } from './errors.js';
+export { HttpClient, type Identity, type RequestOptions } from './http/client.js';
+export { generateKey, hashKey, prefixKey } from './crypto.js';
 
-export * from './types/index.js';
-export * from './data/index.js';
-export { Hermes, BASE_URL, Client };
-export { Auth, Tenant, User, Mail, Contacts, Calendar, Events, Feeds, Scheduling };
+export { ContactsResource } from './resources/contacts.js';
+export { MailResource } from './resources/mail.js';
+export { KeysResource } from './resources/keys.js';
+export { UserResource } from './resources/user.js';
+export { TenantResource } from './resources/tenant.js';
+export { CalendarResource } from './resources/calendar.js';
+export { EventsResource } from './resources/events.js';
+export { FeedsResource } from './resources/feeds.js';
+export { SchedulingResource } from './resources/scheduling.js';
 
-export default Hermes;
+export type * from './types/index.js';

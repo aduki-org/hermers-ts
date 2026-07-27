@@ -1,0 +1,12 @@
+{
+  "hex": "A0S7FD3DE3BE81271F48",
+  "user": "U0X3BFF58E91EC7",
+  "tenant": "T0X9E68DD4B15C6",
+  "owner": true,
+  "scopes": [
+    "tenant:tenant.**",
+    "user:user.**"
+  ],
+  "deny": [],
+  "tier": "free"
+}

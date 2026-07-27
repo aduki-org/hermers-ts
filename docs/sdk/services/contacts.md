@@ -1,64 +1,32 @@
-# Contacts Service (`@hermers/sdk`)
+# Contacts (`hermes.contacts`)
 
-Package: `@hermers/sdk`  
-Property: `hermes.contacts`
+CardDAV contacts via `POST/GET/PATCH/DELETE /user/contacts`.
 
-Manages CardDAV contact cards, search, and group collections.
+Tenant and user come from the session (whoami). **Never pass tenant/user hex.**
 
----
+## Methods
 
-## Methods & Signatures
+| Method | HTTP |
+| --- | --- |
+| `create({ vcard, name?, emails?, phones?, groups?, meta? })` | `POST /user/contacts` |
+| `list(query?)` | `GET /user/contacts` |
+| `group(group)` | `GET /user/contacts/group/{group}` |
+| `search(q)` | `GET /user/contacts/search/{q}` |
+| `retrieve(hex)` | `GET /user/contacts/{hex}` |
+| `updateVcard(hex, vcard)` | `PATCH …/vcard` |
+| `updateEmails` / `updatePhones` / `updateGroups` / `updateMeta` | `PATCH …` |
+| `del(hex)` | `DELETE /user/contacts/{hex}` |
 
-### `list(options?: { cursor?: string; limit?: number }): Promise<Page<Contact>>`
-
-Lists contact cards for the user.
-
-- **Parameters:**
-  - `options.cursor` (`string`, optional): Pagination cursor string.
-  - `options.limit` (`number`, optional): Limit (1 to 100). Default `50`.
-- **Return Type:** `Promise<Page<Contact>>`
+## Example
 
 ```ts
-export interface Contact {
-  hex: string;
-  etag: string;
-  name?: string;
-  emails?: string[];
-  phones?: string[];
-  groups?: string[];
-  created: string;
-}
+await hermes.ready();
+const created = await hermes.contacts.create({
+  name: 'Ada Lovelace',
+  emails: ['ada@example.com'],
+  vcard: 'BEGIN:VCARD\nVERSION:3.0\nFN:Ada Lovelace\nEND:VCARD',
+});
+const page = await hermes.contacts.list({ limit: 50 });
 ```
 
----
-
-### `get(hex: string): Promise<ContactDetail>`
-
-Retrieves vCard detail for a contact by hex ID.
-
-- **Parameters:**
-  - `hex` (`string`): Target contact hex ID.
-- **Return Type:** `Promise<ContactDetail>`
-
----
-
-### `create(data: { name: string; email?: string; phone?: string; vcard?: string }): Promise<Contact>`
-
-Creates a new contact card.
-
-- **Parameters:**
-  - `data.name` (`string`): Contact full name.
-  - `data.email` (`string`, optional): Primary email.
-  - `data.phone` (`string`, optional): Primary phone.
-  - `data.vcard` (`string`, optional): Raw vCard payload.
-- **Return Type:** `Promise<Contact>`
-
----
-
-### `remove(hex: string): Promise<void>`
-
-Deletes a contact card by hex ID.
-
-- **Parameters:**
-  - `hex` (`string`): Target contact hex ID.
-- **Return Type:** `Promise<void>`
+API reference: [guide/http/user/contacts.md](../../../guide/http/user/contacts.md).
