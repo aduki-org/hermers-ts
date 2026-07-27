@@ -8,7 +8,11 @@ export interface RequestOptions {
   match?: string;
 }
 
-/** Cached identity from `GET /auth/whoami`. */
+/**
+ * Cached identity from REST `GET /auth/whoami`
+ * (`crates/api/src/handlers/auth/whoami.rs`).
+ * gRPC Session/Identity is typed separately in `@hermers/grpc`.
+ */
 export interface Identity {
   /** Session / JTI hex. */
   hex?: string;
@@ -20,8 +24,10 @@ export interface Identity {
   scopes?: string[];
   deny?: string[];
   tier?: string;
-  email?: string;
-  name?: string;
+  /** Present on wire; currently always `""`. */
+  ip?: string;
+  /** Present on wire; currently always `""`. */
+  agent?: string;
   raw?: unknown;
 }
 
@@ -35,8 +41,6 @@ interface WhoamiResponse {
   tier?: string;
   ip?: string;
   agent?: string;
-  email?: string;
-  name?: string;
 }
 
 /**
@@ -125,8 +129,8 @@ export class HttpClient {
       scopes: profile.scopes,
       deny: profile.deny,
       tier: profile.tier,
-      email: profile.email,
-      name: profile.name,
+      ip: profile.ip,
+      agent: profile.agent,
       raw: profile,
     };
     this.identityCache = identity;

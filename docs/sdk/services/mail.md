@@ -87,7 +87,7 @@ Response: `{ "hex": "…" }`.
 | `del(hex)` | `DELETE /user/mail/{hex}` | empty / `null` |
 | `clearMailbox(mailbox)` | `DELETE /user/mail/mailbox/{mailbox}` | empty / `null` |
 
-**No `GET /user/mail/{hex}`** in the API routes. The SDK `retrieve` method is not backed by HTTP. A `MessageDetail` view exists in DB (`structure?`, `modseq`, `created`, `blob: { hex, size, mime }`) but is not exposed here.
+**No `GET /user/mail/{hex}`** on the REST API — `@hermers/sdk` does not expose `retrieve`. **gRPC** `MailService.GetMessage` does (`client.mail.retrieve`) and returns the proto `Message` (`date`, `from`, `to[]`, `flags: Flag[]`, `blob`, …) — not the REST list row (`internaldate`, `sender`, `mailbox: {hex,name}`).
 
 ## Mailboxes
 

@@ -26,6 +26,8 @@ describe('@hermers/sdk unit', () => {
             scopes: [],
             deny: [],
             tier: 'free',
+            ip: '',
+            agent: '',
           }),
           { status: 200 }
         ),
@@ -42,7 +44,7 @@ describe('@hermers/sdk unit', () => {
     assert.equal(hashKey(key), createHash('sha256').update(key).digest('hex'));
   });
 
-  it('throws HermesError from envelope', async () => {
+  it('throws HermesError from flat API envelope', async () => {
     const fetchMock: typeof fetch = async (input) => {
       const url = String(input);
       if (url.includes('/auth/whoami')) {
@@ -55,22 +57,25 @@ describe('@hermers/sdk unit', () => {
             scopes: [],
             deny: [],
             tier: 'free',
+            ip: '',
+            agent: '',
           }),
           { status: 200 }
         );
       }
-      return new Response(
-        JSON.stringify({ error: { code: 'not_found', message: 'missing', field: 'hex' } }),
-        { status: 404, statusText: 'Not Found' }
-      );
+      return new Response(JSON.stringify({ error: 'not_found', message: 'missing' }), {
+        status: 404,
+        statusText: 'Not Found',
+      });
     };
     const hermes = new Hermes('hm_live_abc', {
       apiBase: 'https://example.test/v1',
       fetch: fetchMock,
     });
-    await assert.rejects(() => hermes.contacts.retrieve('x'), (err: unknown) => {
+    await assert.rejects(() => hermes.contacts.list(), (err: unknown) => {
       assert.ok(err instanceof HermesError);
       assert.equal(err.code, 'not_found');
+      assert.equal(err.message, 'missing');
       return true;
     });
   });
@@ -88,6 +93,8 @@ describe('@hermers/sdk unit', () => {
             scopes: [],
             deny: [],
             tier: 'free',
+            ip: '',
+            agent: '',
           }),
           { status: 200 }
         );
@@ -110,5 +117,30 @@ describe('@hermers/sdk unit', () => {
     assert.equal(body.hash, hashKey(fixed));
     assert.equal(body.prefix, prefixKey(fixed));
     assert.ok(!('key' in body));
+  });
+
+  it('caches whoami ip/agent fields', async () => {
+    const hermes = new Hermes('hm_live_abc', {
+      apiBase: 'https://example.test/v1',
+      fetch: async () =>
+        new Response(
+          JSON.stringify({
+            hex: 'A0S',
+            user: 'U0X',
+            tenant: 'T0X',
+            owner: false,
+            scopes: ['user.mail.**'],
+            deny: [],
+            tier: 'free',
+            ip: '',
+            agent: '',
+          }),
+          { status: 200 }
+        ),
+    });
+    const id = await hermes.ready();
+    assert.equal(id.ip, '');
+    assert.equal(id.agent, '');
+    assert.equal(id.owner, false);
   });
 });

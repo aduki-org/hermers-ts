@@ -2,6 +2,8 @@
 
 Wraps `hermes.mail.MailService`. Tenant/owner are injected from whoami where required.
 
+**Unlike REST:** gRPC has `retrieve` / `GetMessage`, `send` takes `to: string[]` + raw bytes, and mailbox create is `{ name, role? }` only — not the REST `MailboxData` body. Proto `Message` uses `date` / `from` / `Flag[]`, not REST `internaldate` / `sender`.
+
 ```ts
 const { items: boxes } = await client.mail.listMailboxes();
 const { items, next } = await client.mail.listMessages({

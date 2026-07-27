@@ -1,7 +1,7 @@
 import type { GrpcTransport } from '../transport.js';
 import type { Contact, ListResp, SyncResp } from '../generated/contact.js';
 
-/** ContactService — types generated from `proto/contact.proto`. */
+/** ContactService — types generated from `proto/contact.proto` (gRPC-only shape). */
 export class ContactsResource {
   constructor(private readonly transport: GrpcTransport) {}
 

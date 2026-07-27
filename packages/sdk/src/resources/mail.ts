@@ -1,7 +1,20 @@
 import type { HttpClient } from '../http/client.js';
-import type { ListQuery, Mailbox, Message, MessageDetail, Page, Thread } from '../types/index.js';
+import type {
+  ListQuery,
+  Mailbox,
+  MailboxCreate,
+  MailboxModel,
+  MailboxUpdate,
+  Message,
+  Page,
+  Thread,
+} from '../types/index.js';
 
-/** Mail + mailbox endpoints under `/user/mail` and `/user/mailbox`. */
+/**
+ * Mail + mailbox endpoints under `/user/mail` and `/user/mailbox`.
+ * REST list rows use `internaldate` and `mailbox: { hex, name }` — not gRPC Message.
+ * There is no `GET /user/mail/{hex}` on the HTTP API (gRPC has GetMessage).
+ */
 export class MailResource {
   constructor(private readonly http: HttpClient) {}
 
@@ -87,26 +100,22 @@ export class MailResource {
     return this.http.get<Page<Message>>(`/user/mail/thread/${thread}`);
   }
 
-  retrieve(hex: string): Promise<MessageDetail> {
-    return this.http.get<MessageDetail>(`/user/mail/${hex}`);
+  del(hex: string): Promise<null> {
+    return this.http.delete<null>(`/user/mail/${hex}`);
   }
 
-  del(hex: string): Promise<void> {
-    return this.http.delete<void>(`/user/mail/${hex}`);
+  clearMailbox(mailbox: string): Promise<null> {
+    return this.http.delete<null>(`/user/mail/mailbox/${mailbox}`);
   }
 
-  clearMailbox(mailbox: string): Promise<void> {
-    return this.http.delete<void>(`/user/mail/mailbox/${mailbox}`);
-  }
-
-  updateFlags(hex: string, data: { add?: string[]; remove?: string[] }): Promise<void> {
-    return this.http.patch<void>(`/user/mail/${hex}/flags`, data);
+  updateFlags(hex: string, data: { add?: string[]; remove?: string[] }): Promise<null> {
+    return this.http.patch<null>(`/user/mail/${hex}/flags`, data);
   }
 
   // —— Mailboxes ——
 
-  createMailbox(data: Record<string, unknown>): Promise<Mailbox> {
-    return this.http.post<Mailbox>('/user/mailbox', data);
+  createMailbox(data: MailboxCreate): Promise<MailboxModel> {
+    return this.http.post<MailboxModel>('/user/mailbox', data);
   }
 
   listMailboxes(query?: ListQuery): Promise<Page<Mailbox>> {
@@ -129,15 +138,15 @@ export class MailResource {
     return this.http.get<Page<Mailbox>>(`/user/mailbox/search/${encodeURIComponent(q)}`);
   }
 
-  updateMailbox(hex: string, data: Record<string, unknown>): Promise<Mailbox> {
-    return this.http.patch<Mailbox>(`/user/mailbox/${hex}/basic`, data);
+  updateMailbox(hex: string, data: MailboxUpdate): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/basic`, data);
   }
 
-  renameMailbox(hex: string, name: string): Promise<Mailbox> {
-    return this.http.patch<Mailbox>(`/user/mailbox/${hex}/name`, { name });
+  renameMailbox(hex: string, name: string): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/name`, { name });
   }
 
-  deleteMailbox(hex: string): Promise<void> {
-    return this.http.delete<void>(`/user/mailbox/${hex}`);
+  deleteMailbox(hex: string): Promise<null> {
+    return this.http.delete<null>(`/user/mailbox/${hex}`);
   }
 }

@@ -1,19 +1,13 @@
 import type { HttpClient } from '../http/client.js';
-import type { Contact, ContactDetail, ListQuery, Page } from '../types/index.js';
+import type { Contact, ContactCreate, ContactModel, ListQuery, Page } from '../types/index.js';
 
-/** CardDAV contacts (`/user/contacts`). */
+/** CardDAV contacts (`/user/contacts`). REST shapes — not the gRPC Contact message. */
 export class ContactsResource {
   constructor(private readonly http: HttpClient) {}
 
-  create(data: {
-    vcard: string;
-    name?: string;
-    emails?: string[];
-    phones?: string[];
-    groups?: string[];
-    meta?: Record<string, unknown>;
-  }): Promise<ContactDetail> {
-    return this.http.post<ContactDetail>('/user/contacts', {
+  /** Creates a contact. API requires `name` + `vcard`; returns full Contact model. */
+  create(data: ContactCreate): Promise<ContactModel> {
+    return this.http.post<ContactModel>('/user/contacts', {
       ...data,
       meta: data.meta ?? {},
     });
@@ -31,31 +25,28 @@ export class ContactsResource {
     return this.http.get<Page<Contact>>(`/user/contacts/search/${encodeURIComponent(q)}`);
   }
 
-  retrieve(hex: string): Promise<ContactDetail> {
-    return this.http.get<ContactDetail>(`/user/contacts/${hex}`);
+  /** PATCH returns JSON `null`. */
+  updateVcard(hex: string, vcard: string, name?: string): Promise<null> {
+    return this.http.patch<null>(`/user/contacts/${hex}/vcard`, { vcard, name });
   }
 
-  updateVcard(hex: string, vcard: string): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/user/contacts/${hex}/vcard`, { vcard });
+  updateEmails(hex: string, emails: string[]): Promise<null> {
+    return this.http.patch<null>(`/user/contacts/${hex}/emails`, { emails });
   }
 
-  updateEmails(hex: string, emails: string[]): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/user/contacts/${hex}/emails`, { emails });
+  updatePhones(hex: string, phones: string[]): Promise<null> {
+    return this.http.patch<null>(`/user/contacts/${hex}/phones`, { phones });
   }
 
-  updatePhones(hex: string, phones: string[]): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/user/contacts/${hex}/phones`, { phones });
+  updateGroups(hex: string, groups: string[]): Promise<null> {
+    return this.http.patch<null>(`/user/contacts/${hex}/groups`, { groups });
   }
 
-  updateGroups(hex: string, groups: string[]): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/user/contacts/${hex}/groups`, { groups });
+  updateMeta(hex: string, meta: Record<string, unknown>): Promise<null> {
+    return this.http.patch<null>(`/user/contacts/${hex}/meta`, { meta });
   }
 
-  updateMeta(hex: string, meta: Record<string, unknown>): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/user/contacts/${hex}/meta`, { meta });
-  }
-
-  del(hex: string): Promise<{ ok: boolean }> {
-    return this.http.delete<{ ok: boolean }>(`/user/contacts/${hex}`);
+  del(hex: string): Promise<null> {
+    return this.http.delete<null>(`/user/contacts/${hex}`);
   }
 }

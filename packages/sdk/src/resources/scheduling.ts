@@ -1,6 +1,7 @@
 import type { HttpClient } from '../http/client.js';
 import type {
   Appointment,
+  AppointmentCreate,
   Availability,
   Guest,
   ListQuery,
@@ -10,7 +11,7 @@ import type {
   Window,
 } from '../types/index.js';
 
-/** Booking + appointments + availability. */
+/** Booking + appointments + availability (REST JSON shapes). */
 export class SchedulingResource {
   constructor(private readonly http: HttpClient) {}
 
@@ -21,31 +22,19 @@ export class SchedulingResource {
   book(
     slug: string,
     data: { name: string; email: string; start: string; end: string }
-  ): Promise<{ appt: Appointment; guest: Guest }> {
-    return this.http.post<{ appt: Appointment; guest: Guest }>(`/book/${slug}`, data);
+  ): Promise<{ appointment: Appointment; guest: Guest }> {
+    return this.http.post<{ appointment: Appointment; guest: Guest }>(`/book/${slug}`, data);
   }
 
-  guest(token: string): Promise<{ appt: Appointment; guest: Guest }> {
-    return this.http.get<{ appt: Appointment; guest: Guest }>(`/book/guest/${token}`);
+  guest(token: string): Promise<{ guest: Guest; appointment: Appointment }> {
+    return this.http.get<{ guest: Guest; appointment: Appointment }>(`/book/guest/${token}`);
   }
 
   cancelGuest(token: string): Promise<{ status: string }> {
     return this.http.post<{ status: string }>(`/book/guest/${token}/cancel`);
   }
 
-  createAppointment(data: {
-    service: string;
-    start: string;
-    end: string;
-    timezone?: string;
-    uid?: string;
-    method?: string;
-    event?: string;
-    location?: string;
-    notes?: string;
-    rescheduled?: string;
-    meta?: Record<string, unknown>;
-  }): Promise<Appointment> {
+  createAppointment(data: AppointmentCreate): Promise<Appointment> {
     return this.http.post<Appointment>('/user/appointments', data);
   }
 
@@ -57,25 +46,25 @@ export class SchedulingResource {
     return this.http.get<Appointment>(`/user/appointments/${hex}`);
   }
 
-  cancelAppointment(hex: string): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/user/appointments/${hex}/cancel`, {});
+  cancelAppointment(hex: string): Promise<null> {
+    return this.http.patch<null>(`/user/appointments/${hex}/cancel`, {});
   }
 
-  deleteAppointment(hex: string): Promise<{ ok: boolean }> {
-    return this.http.delete<{ ok: boolean }>(`/user/appointments/${hex}`);
+  deleteAppointment(hex: string): Promise<null> {
+    return this.http.delete<null>(`/user/appointments/${hex}`);
   }
 
   createService(data: {
     name: string;
     slug: string;
-    duration: number;
+    duration?: number;
     buffer?: number;
     notice?: number;
     horizon?: number;
     increment?: number;
     max?: number;
     location?: Record<string, unknown>;
-    questions?: string[];
+    questions?: unknown;
     meta?: Record<string, unknown>;
   }): Promise<Service> {
     return this.http.post<Service>('/user/services', data);
@@ -89,8 +78,8 @@ export class SchedulingResource {
     return this.http.get<Service>(`/user/services/${hex}`);
   }
 
-  deleteService(hex: string): Promise<void> {
-    return this.http.delete<void>(`/user/services/${hex}`);
+  deleteService(hex: string): Promise<null> {
+    return this.http.delete<null>(`/user/services/${hex}`);
   }
 
   windows(): Promise<Window[]> {

@@ -9,7 +9,10 @@ import type {
   SendResp,
 } from '../generated/mail.js';
 
-/** MailService — types generated from `proto/mail.proto`. */
+/**
+ * MailService — types generated from `proto/mail.proto`.
+ * Differs from REST: GetMessage exists; Message uses `date`/`from`/`flags: Flag[]`, not `internaldate`/`sender`.
+ */
 export class MailResource {
   constructor(private readonly transport: GrpcTransport) {}
 

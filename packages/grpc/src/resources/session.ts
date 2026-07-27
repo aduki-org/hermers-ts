@@ -4,6 +4,7 @@ import type { Session } from '../generated/session.js';
 /**
  * Session helpers for API-key clients.
  * Login / password / refresh JWT flows are intentionally omitted.
+ * Proto `Session` differs from REST whoami (timestamps; no always-empty ip/agent guarantee).
  */
 export class SessionResource {
   constructor(private readonly transport: GrpcTransport) {}

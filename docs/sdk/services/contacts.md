@@ -26,7 +26,7 @@ const page = await hermes.contacts.list({ limit: 50 });
 | `updateVcard` / `updateEmails` / `updatePhones` / `updateGroups` / `updateMeta` | `PATCH …/{hex}/…` | JSON **`null`** |
 | `del(hex)` | `DELETE /user/contacts/{hex}` | JSON **`null`** |
 
-There is **no** `GET /user/contacts/{hex}`. The SDK `retrieve(hex)` method is not backed by a route.
+There is **no** `GET /user/contacts/{hex}` on REST — the SDK does not expose `retrieve`. **gRPC** `ContactService.Get` does exist (`client.contacts.retrieve`) and returns the proto `Contact` (`hex`, `tenant`, `owner`, `vcard`, `etag`, timestamps) — a different shape from the REST create model / list row.
 
 Scope: `contacts:read` / `contacts:write`.
 

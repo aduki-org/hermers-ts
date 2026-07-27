@@ -3,8 +3,10 @@ import type {
   Audit,
   ListQuery,
   Page,
-  PreferenceDetail,
+  Preference,
+  PreferenceInfoBody,
   Session,
+  User,
   UserProfile,
 } from '../types/index.js';
 
@@ -12,32 +14,44 @@ import type {
 export class UserResource {
   constructor(private readonly http: HttpClient) {}
 
-  retrieve(): Promise<UserProfile> {
-    return this.http.get<UserProfile>('/user');
+  /** `GET /user` — full User model (not UserProfile view). */
+  retrieve(): Promise<User> {
+    return this.http.get<User>('/user');
   }
 
-  lookupByEmail(email: string): Promise<UserProfile> {
-    return this.http.post<UserProfile>('/user/lookup/email', { email });
+  /** `POST /user/lookup/email` — full User model. */
+  lookupByEmail(email: string): Promise<User> {
+    return this.http.post<User>('/user/lookup/email', { email });
   }
 
-  updateInfo(data: { name?: string }): Promise<UserProfile> {
-    return this.http.patch<UserProfile>('/user/info', data);
+  /** `POST /user/lookup/profile` — UserProfile view with nested tenant/role. */
+  lookupProfile(hex: string): Promise<UserProfile> {
+    return this.http.post<UserProfile>('/user/lookup/profile', { hex });
   }
 
-  updateEmail(email: string): Promise<UserProfile> {
-    return this.http.patch<UserProfile>('/user/email', { email });
+  /** API requires both `name` and `bio`. */
+  updateInfo(data: { name: string; bio: string }): Promise<User> {
+    return this.http.patch<User>('/user/info', data);
   }
 
-  updatePhone(phone: string): Promise<UserProfile> {
-    return this.http.patch<UserProfile>('/user/phone', { phone });
+  /** Body is a raw JSON string (not `{ email }`). */
+  updateEmail(email: string): Promise<User> {
+    return this.http.patch<User>('/user/email', email);
   }
 
-  updateMeta(meta: Record<string, unknown>): Promise<UserProfile> {
-    return this.http.patch<UserProfile>('/user/meta', { meta });
+  /** Body is a raw JSON string. */
+  updatePhone(phone: string): Promise<User> {
+    return this.http.patch<User>('/user/phone', phone);
   }
 
-  updateAvatar(avatar: string): Promise<UserProfile> {
-    return this.http.patch<UserProfile>('/user/avatar', { avatar });
+  /** Body is the meta object itself (not wrapped). */
+  updateMeta(meta: Record<string, unknown>): Promise<User> {
+    return this.http.patch<User>('/user/meta', meta);
+  }
+
+  /** Body is a raw JSON string. */
+  updateAvatar(avatar: string): Promise<User> {
+    return this.http.patch<User>('/user/avatar', avatar);
   }
 
   activeSessions(query?: ListQuery): Promise<Page<Session>> {
@@ -48,10 +62,22 @@ export class UserResource {
     return this.http.get<Page<Audit>>('/user/audits', { query });
   }
 
+  /**
+   * Preference PATCH returns the full Preference row.
+   * `info` accepts a typed body; other sections are freeform jsonb.
+   */
+  updatePreferences(
+    section: 'info',
+    data: PreferenceInfoBody
+  ): Promise<Preference>;
+  updatePreferences(
+    section: 'notifications' | 'communication' | 'privacy' | 'display' | 'regional',
+    data: Record<string, unknown>
+  ): Promise<Preference>;
   updatePreferences(
     section: 'info' | 'notifications' | 'communication' | 'privacy' | 'display' | 'regional',
-    data: Record<string, unknown>
-  ): Promise<PreferenceDetail> {
-    return this.http.patch<PreferenceDetail>(`/user/preferences/${section}`, data);
+    data: PreferenceInfoBody | Record<string, unknown>
+  ): Promise<Preference> {
+    return this.http.patch<Preference>(`/user/preferences/${section}`, data);
   }
 }

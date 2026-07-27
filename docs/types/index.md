@@ -284,3 +284,18 @@ enum Plan { FREE=0, STARTER=1, PRO=2, BUSINESS=3, ENTERPRISE=4 } // TierPlan
 ```
 
 See per-service gRPC pages for message field tables.
+
+## REST vs gRPC (intentional differences)
+
+Do **not** share one TypeScript interface across transports. Examples:
+
+| Area | REST (`@hermers/sdk`) | gRPC (`@hermers/grpc`) |
+| --- | --- | --- |
+| Contact get-by-hex | **no route** | `Get` → proto `Contact` |
+| Contact create | body needs `name`+`vcard`+`meta`; returns diesel model | body `vcard` only; returns proto `Contact` |
+| Message list | `internaldate`, `sender`, `mailbox:{hex,name}` | N/A list shape; GetMessage uses `date`, `from`, `flags:Flag[]` |
+| Message get | **no route** | `GetMessage` exists |
+| Feed | diesel model (`id`, `meta`, `sync`, …) | proto `Feed` (no `id`/`meta`) |
+| Security status | `policy` / `records` objects | `policyJson` / `recordsJson` strings |
+| Whoami | flat JSON + empty `ip`/`agent` | proto `Session` (+ timestamps) |
+| Errors | `{ error, message }` JSON | `HermesGrpcError` status codes |

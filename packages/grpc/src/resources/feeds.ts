@@ -1,7 +1,7 @@
 import type { GrpcTransport } from '../transport.js';
 import type { Feed, ListResp, SyncResp } from '../generated/feeds.js';
 
-/** FeedService — types generated from `proto/feeds.proto`. */
+/** FeedService — types from `proto/feeds.proto` (no `id`/`meta`/`sync` like REST Feed model). */
 export class FeedsResource {
   constructor(private readonly transport: GrpcTransport) {}
 

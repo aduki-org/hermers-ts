@@ -47,15 +47,15 @@ export class KeysResource {
     return { hex: res.hex, key: rawKey };
   }
 
-  updateName(hex: string, name: string): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/tenant/keys/${hex}/name`, { name });
+  updateName(hex: string, name: string): Promise<null> {
+    return this.http.patch<null>(`/tenant/keys/${hex}/name`, { name });
   }
 
-  updateScopes(hex: string, scopes: string[]): Promise<{ ok: boolean }> {
-    return this.http.patch<{ ok: boolean }>(`/tenant/keys/${hex}/scopes`, { scopes });
+  updateScopes(hex: string, scopes: string[]): Promise<null> {
+    return this.http.patch<null>(`/tenant/keys/${hex}/scopes`, { scopes });
   }
 
-  del(hex: string): Promise<{ ok: boolean }> {
-    return this.http.delete<{ ok: boolean }>(`/tenant/keys/${hex}`);
+  del(hex: string): Promise<null> {
+    return this.http.delete<null>(`/tenant/keys/${hex}`);
   }
 }

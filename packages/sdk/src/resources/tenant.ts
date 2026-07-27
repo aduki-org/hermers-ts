@@ -9,6 +9,7 @@ import type {
   Rule,
   RuleDetail,
   Security,
+  Tenant,
   TenantProfile,
   TenantSummary,
   Usage,
@@ -24,8 +25,9 @@ export class TenantResource {
     return this.http.get<TenantProfile>('/tenant');
   }
 
-  update(data: { name: string }): Promise<TenantProfile> {
-    return this.http.patch<TenantProfile>('/tenant/edit', data);
+  /** Returns full Tenant model (includes `id`, `updated`, billing fields). */
+  update(data: { name: string }): Promise<Tenant> {
+    return this.http.patch<Tenant>('/tenant/edit', data);
   }
 
   view(hex: string): Promise<TenantProfile> {
@@ -58,8 +60,8 @@ export class TenantResource {
     return this.http.post('/tenant/invite', data);
   }
 
-  removeMember(user: string): Promise<{ ok: boolean }> {
-    return this.http.delete<{ ok: boolean }>(`/tenant/members/${user}`);
+  removeMember(user: string): Promise<null> {
+    return this.http.delete<null>(`/tenant/members/${user}`);
   }
 
   // —— Domains ——
