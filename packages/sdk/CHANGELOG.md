@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.1.0
+
+- Eager `GET /auth/whoami` on construct with identity cache (`ready()` / `whoami()` / `me`)
+- Resource calls no longer take tenant/user hex — filled from cache
+- Live integration tests against production (`HERMERS_API_KEY`); skip when unset
+- Docs: API-key-only usage, whoami cache, live test instructions
+
 ## 2.0.0
 
 Breaking redesign (Stripe/Square-style):

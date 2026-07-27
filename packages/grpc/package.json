@@ -1,6 +1,6 @@
 {
   "name": "@hermers/grpc",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Official Hermes gRPC SDK — native TLS client generated from proto3 (API key auth)",
   "type": "module",
   "main": "./dist/index.js",

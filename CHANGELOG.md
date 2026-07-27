@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2026-07-27
+
+### Added
+
+- **Whoami cache**: Both `@hermers/sdk` and `@hermers/grpc` eagerly call whoami on construct, expose `ready()` / `whoami()` / `me`, and inject tenant/user from cache (callers never pass hex ids).
+- **Live tests**: Production integration suites gated on `HERMERS_API_KEY` (skip when unset).
+
+### Changed
+
+- Package versions bumped to `2.1.0`.
+
+---
+
 ## [2.0.0] - 2026-07-27
 
 ### Changed
