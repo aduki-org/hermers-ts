@@ -1,100 +1,148 @@
 # User (`hermes.user`)
 
-Authenticated user profile under `/user`. Uses the whoami session; no tenant/user args.
+Authenticated user under `/user`.
+
+**Sources:** `crates/api/src/handlers/tenant/user/{view,edit,preferences,sessions,audits}.rs`, `crates/db/src/models/platform/{users,preferences}.rs`, `crates/db/src/views/platform/users.rs`, `crates/db/src/views/auth/{sessions,audits}.rs`.
 
 ```ts
-const profile = await hermes.user.retrieve();
-await hermes.user.updateInfo({ name: 'Ada' });
-const sessions = await hermes.user.activeSessions({ limit: 20 });
+const user = await hermes.user.retrieve(); // full User model from GET /user
+await hermes.user.updateInfo({ name: 'Ada', bio: '' }); // API requires both name + bio
 ```
 
-## Methods
+## Profile
 
-| Method | Signature | HTTP | Returns |
-| --- | --- | --- | --- |
-| `retrieve` | `() => Promise<UserProfile>` | `GET /user` | Profile |
-| `lookupByEmail` | `(email: string) => Promise<UserProfile>` | `POST /user/lookup/email` | Profile |
-| `updateInfo` | `({ name? }) => Promise<UserProfile>` | `PATCH /user/info` | Profile |
-| `updateEmail` | `(email: string) => Promise<UserProfile>` | `PATCH /user/email` | Profile |
-| `updatePhone` | `(phone: string) => Promise<UserProfile>` | `PATCH /user/phone` | Profile |
-| `updateMeta` | `(meta) => Promise<UserProfile>` | `PATCH /user/meta` | Profile |
-| `updateAvatar` | `(avatar: string) => Promise<UserProfile>` | `PATCH /user/avatar` | Profile |
-| `activeSessions` | `(query?) => Promise<Page<Session>>` | `GET /user/sessions/active` | Page |
-| `audits` | `(query?) => Promise<Page<Audit>>` | `GET /user/audits` | Page |
-| `updatePreferences` | `(section, data) => Promise<PreferenceDetail>` | `PATCH /user/preferences/{section}` | Preferences |
+| SDK | HTTP | Returns |
+| --- | --- | --- |
+| `retrieve()` | `GET /user` | **`User` model** (not the profile view) |
+| `lookupByEmail(email)` | `POST /user/lookup/email` `{ email }` | `User` model |
+| — | `POST /user/lookup/profile` `{ hex }` | `UserProfile` view |
 
-### Preference sections
+### `User` (`GET /user`)
 
-`'info' | 'notifications' | 'communication' | 'privacy' | 'display' | 'regional'`
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` | string | no |
+| `tenant` | string | no — tenant **hex** |
+| `email` / `name` | string | no |
+| `phone` / `bio` / `avatar` / `totp` | string | yes |
+| `owner` | boolean | no |
+| `state` | `"active"\|"suspended"\|"pending"\|"deleted"` | no |
+| `timezone` / `locale` | string | no |
+| `contacts` | object | yes |
+| `meta` | object | no |
+| `last` | datetime | yes |
+| `created` / `updated` | datetime | no |
 
-## Return types
-
-### `UserProfile`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `email` | `string` |
-| `name` | `string` |
-| `phone` | `string?` |
-| `avatar` | `string?` |
-| `state` | `string?` |
-| `totp` | `boolean?` |
-| `meta` | `Record<string, unknown>?` |
-| `created` | `string` |
-
-Example:
+`password` is never serialized.
 
 ```json
 {
-  "hex": "U0X3BFF58E91EC7",
+  "id": 1,
+  "hex": "U0X…",
+  "tenant": "T0X…",
   "email": "ada@example.com",
-  "name": "Ada",
   "phone": null,
+  "name": "Ada",
+  "bio": null,
   "avatar": null,
+  "owner": true,
   "state": "active",
-  "totp": false,
+  "totp": null,
+  "timezone": "Etc/UTC",
+  "locale": "en",
+  "contacts": null,
   "meta": {},
-  "created": "2026-01-01T00:00:00Z"
+  "last": null,
+  "created": "2026-01-01T00:00:00",
+  "updated": "2026-01-01T00:00:00"
 }
 ```
 
-### `Session` (active sessions)
+### `UserProfile` (lookup/profile only)
 
 | Field | Type |
 | --- | --- |
-| `hex` | `string` |
-| `ip` | `string?` |
-| `agent` | `string?` |
-| `device` | `object?` |
-| `location` | `object?` |
-| `seen` | `string?` |
-| `expires` | `string?` |
-| `created` | `string` |
-| `user` | `object` |
+| `hex` / `email` / `name` / `state` / `timezone` / `locale` | string |
+| `phone` / `bio` / `avatar` | string? |
+| `owner` | boolean |
+| `last` | datetime? |
+| `created` | datetime |
+| `tenant` | `{ hex, name, slug, plan, kind }` |
+| `role` | `{ hex, label, owner, privileges, kind }` or `{}` |
 
-### `Audit`
+## Edits
+
+| SDK | HTTP body (API) | Returns |
+| --- | --- | --- |
+| `updateInfo` | `{ "name": string, "bio": string }` — **both required** | `User` |
+| `updateEmail` | JSON **string** `"ada@…"` (SDK may wrap) | `User` |
+| `updatePhone` | JSON **string** | `User` |
+| `updateAvatar` | JSON **string** | `User` |
+| `updateMeta` | JSON **object** (raw) | `User` |
+
+Also on API (not all wrapped by SDK): `PATCH /user/password`, `/user/state`, `/user/totp`, `/user/login`.
+
+## Preferences
+
+| SDK | HTTP | Request | Returns |
+| --- | --- | --- | --- |
+| `updatePreferences('info', data)` | `PATCH /user/preferences/info` | typed — see below | `Preference` |
+| `updatePreferences(section, data)` | `PATCH /user/preferences/{section}` | **any JSON object** | `Preference` |
+
+Sections: `info` \| `notifications` \| `communication` \| `privacy` \| `display` \| `regional`.
+
+### Info body (`PreferenceInfo`)
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `language` | string | yes |
+| `timezone` | string | yes |
+| `currency` | string | yes (ISO 4217, 3 chars) |
+| `theme` | `"light"\|"dark"\|"auto"` | yes |
+
+Other sections: freeform jsonb (size/depth validated only).
+
+### `Preference` response
 
 | Field | Type |
 | --- | --- |
-| `hex` | `string` |
-| `action` | `string` |
-| `user` | `object` |
-| `ip` | `string?` |
-| `agent` | `string?` |
-| `created` | `string` |
+| `id` | number |
+| `hex` / `user` | string |
+| `language` / `timezone` / `currency` | string |
+| `theme` | `"light"\|"dark"\|"auto"` |
+| `notifications` / `communication` / `privacy` / `display` / `regional` | object |
+| `created` / `updated` | datetime |
 
-### `PreferenceDetail`
+## Sessions — `Page<Sessions>`
 
-| Field | Type |
-| --- | --- |
-| `info` | `object?` |
-| `notifications` | `object?` |
-| `communication` | `object?` |
-| `privacy` | `object?` |
-| `display` | `object?` |
-| `regional` | `object?` |
+`GET /user/sessions/active`
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` | string | no |
+| `ip` / `agent` | string | yes |
+| `device` / `location` | object | yes |
+| `seen` / `expires` / `created` | datetime | no |
+| `user` | `{ hex, name, email }` | no |
+| `total` | number | no |
+
+## Audits — `Page<Audits>`
+
+`GET /user/audits`
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` / `action` | string | no |
+| `success` | boolean | no |
+| `reason` / `ip` / `agent` | string | yes |
+| `device` | object | yes |
+| `created` | datetime | no |
+| `actor` | `{ hex, name, email }` \| null | yes |
+| `total` | number | no |
+
+Note: field is **`actor`**, not `user`.
 
 ## Errors
 
-Unauthorized → `401`. Insufficient scope → `403`. Validation → `400` with optional `field`. Throws `HermesError`.
+`{ "error": "…", "message": "…" }` — see [Types](../../types/index.md).

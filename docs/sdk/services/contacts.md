@@ -1,6 +1,8 @@
 # Contacts (`hermes.contacts`)
 
-CardDAV contacts via `/user/contacts`. Tenant and user come from whoami — **never pass tenant/user hex**.
+CardDAV contacts under `/user/contacts`. Tenant/user come from the session — never send them in the body.
+
+**Sources:** `crates/api/src/handlers/tenant/user/contacts/*`, `crates/api/src/data/tenant/user/contacts.rs`, `crates/db/src/models/dav/contacts.rs`, `crates/db/src/views/dav/contacts.rs`.
 
 ```ts
 await hermes.ready();
@@ -8,115 +10,108 @@ const created = await hermes.contacts.create({
   name: 'Ada Lovelace',
   emails: ['ada@example.com'],
   vcard: 'BEGIN:VCARD\nVERSION:3.0\nFN:Ada Lovelace\nEND:VCARD',
+  meta: {},
 });
 const page = await hermes.contacts.list({ limit: 50 });
 ```
 
-## Methods
+## Routes & SDK methods
 
-| Method | Signature | HTTP | Returns |
-| --- | --- | --- | --- |
-| `create` | `(data) => Promise<ContactDetail>` | `POST /user/contacts` | Full contact |
-| `list` | `(query?: ListQuery) => Promise<Page<Contact>>` | `GET /user/contacts` | Page |
-| `group` | `(group: string) => Promise<Page<Contact>>` | `GET /user/contacts/group/{group}` | Page |
-| `search` | `(q: string) => Promise<Page<Contact>>` | `GET /user/contacts/search/{q}` | Page |
-| `retrieve` | `(hex: string) => Promise<ContactDetail>` | `GET /user/contacts/{hex}` | Detail |
-| `updateVcard` | `(hex, vcard) => Promise<{ ok: boolean }>` | `PATCH …/vcard` | Ack |
-| `updateEmails` | `(hex, emails) => Promise<{ ok: boolean }>` | `PATCH …/emails` | Ack |
-| `updatePhones` | `(hex, phones) => Promise<{ ok: boolean }>` | `PATCH …/phones` | Ack |
-| `updateGroups` | `(hex, groups) => Promise<{ ok: boolean }>` | `PATCH …/groups` | Ack |
-| `updateMeta` | `(hex, meta) => Promise<{ ok: boolean }>` | `PATCH …/meta` | Ack |
-| `del` | `(hex: string) => Promise<{ ok: boolean }>` | `DELETE /user/contacts/{hex}` | Ack |
-
-Typical scopes: `contacts:read` / `contacts:write`.
-
-## Request: `create`
-
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `vcard` | `string` | yes | vCard payload |
-| `name` | `string` | no | Display name |
-| `emails` | `string[]` | no | |
-| `phones` | `string[]` | no | |
-| `groups` | `string[]` | no | |
-| `meta` | `object` | no | Defaults to `{}` |
-
-## Query: `list`
-
-| Field | Type | Description |
+| SDK | HTTP | Returns |
 | --- | --- | --- |
-| `after` | `string?` | Cursor hex |
-| `limit` | `number?` | Page size |
-| `page` | `number?` | 1-based page |
-| `group` | `string?` | Filter by group |
-| `search` | `string?` | Search string |
+| `create(data)` | `POST /user/contacts` | **`Contact` model** (full row) |
+| `list(query?)` | `GET /user/contacts` | `Page<Contacts>` |
+| `group(group)` | `GET /user/contacts/group/{group}` | `Page<Contacts>` |
+| `search(q)` | `GET /user/contacts/search/{q}` | `Page<Contacts>` |
+| `updateVcard` / `updateEmails` / `updatePhones` / `updateGroups` / `updateMeta` | `PATCH …/{hex}/…` | JSON **`null`** |
+| `del(hex)` | `DELETE /user/contacts/{hex}` | JSON **`null`** |
 
-## Returns
+There is **no** `GET /user/contacts/{hex}`. The SDK `retrieve(hex)` method is not backed by a route.
 
-### `Contact` (list rows)
+Scope: `contacts:read` / `contacts:write`.
 
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `etag` | `string` |
-| `name` | `string?` |
-| `emails` | `string[]?` |
-| `phones` | `string[]?` |
-| `groups` | `string[]?` |
-| `created` | `string` |
-| `total` | `number?` |
+## Create request (`ContactData`)
 
-### `ContactDetail` (create / retrieve)
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `vcard` | string | yes | |
+| `name` | string | **yes** | non-empty, max 200 |
+| `emails` | string[] | no | |
+| `phones` | string[] | no | |
+| `groups` | string[] | no | |
+| `meta` | object | **yes** | any JSON object |
 
-All `Contact` fields plus:
-
-| Field | Type |
-| --- | --- |
-| `vcard` | `string?` |
-| `meta` | `Record<string, unknown>?` |
-| `user` | `Record<string, unknown>?` |
-
-### Page envelope
-
-```ts
-{
-  items: Contact[];
-  total: number;
-  next?: string;
-  page?: number;
-  pages?: number;
-}
-```
-
-### Example create response
+## Create response (`Contact`)
 
 ```json
 {
+  "id": 1,
   "hex": "C0X…",
-  "etag": "\"abc123\"",
+  "tenant": "T0X…",
+  "user": "U0X…",
+  "etag": "…",
+  "vcard": "BEGIN:VCARD…",
   "name": "Ada Lovelace",
   "emails": ["ada@example.com"],
   "phones": [],
   "groups": [],
-  "vcard": "BEGIN:VCARD\nVERSION:3.0\nFN:Ada Lovelace\nEND:VCARD",
   "meta": {},
-  "created": "2026-07-28T00:00:00Z",
-  "user": {}
+  "book": null,
+  "href": null,
+  "uid": null,
+  "version": null,
+  "size": null,
+  "deleted": null,
+  "created": "2026-07-28T12:00:00",
+  "updated": "2026-07-28T12:00:00"
 }
 ```
 
-### Mutation ack
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `user` / `etag` / `vcard` | string | no |
+| `name` | string | yes |
+| `emails` / `phones` / `groups` | (string\|null)[] | no |
+| `meta` | object | no |
+| `book` / `href` / `uid` / `version` | string | yes |
+| `size` | number | yes |
+| `deleted` | datetime | yes |
+| `created` / `updated` | datetime | no |
+
+## List item (`Contacts`)
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` | string | no |
+| `etag` | string | no |
+| `name` | string | yes |
+| `emails` / `phones` / `groups` | (string\|null)[] | no |
+| `created` | datetime | no |
+| `total` | number | no (window count; also on `Page.total`) |
+
+### Page envelope
 
 ```json
-{ "ok": true }
+{
+  "items": [ /* Contacts */ ],
+  "total": 42,
+  "next": "C0X…"
+}
 ```
+
+## Patch bodies
+
+| Endpoint | Body |
+| --- | --- |
+| `…/vcard` | `{ "vcard": string, "name"?: string }` |
+| `…/emails` | `{ "emails": string[] }` |
+| `…/phones` | `{ "phones": string[] }` |
+| `…/groups` | `{ "groups": string[] }` |
+| `…/meta` | `{ "meta": object }` |
+
+**Response:** `null` (not `{ "ok": true }`).
 
 ## Errors
 
-| Condition | Typical |
-| --- | --- |
-| Missing write scope | `403` / `forbidden` |
-| Unknown hex | `404` |
-| Invalid vCard | `400` with optional `field` |
-
-Throws `HermesError` — see [Types](../../types/index.md).
+API: `{ "error": "forbidden"|"validation"|"not_found"|…, "message": "…" }` with status 403 / 422 / 404. See [Types](../../types/index.md).

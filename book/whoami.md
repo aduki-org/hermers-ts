@@ -1,52 +1,96 @@
 # Whoami
 
-Both SDKs resolve identity with **whoami** on construct and cache it. Prefer `await client.ready()` before the first resource call.
+Both SDKs resolve identity with **whoami** on construct and cache it. Prefer `await client.ready()` before the first resource call. Resource methods never take tenant/user hex.
 
-## REST (`@hermers/sdk`)
+**REST source:** `crates/api/src/handlers/auth/whoami.rs`.  
+**gRPC source:** `SessionService.Whoami` → proto `Session` (`proto/session.proto` / generated types).
 
-```http
-GET /v1/auth/whoami
-Authorization: Key hm_live_…
+## Identity fields (REST wire + SDK cache)
+
+| Field | Type | Required | Description |
+| --- | --- | --- | --- |
+| `hex` | string | yes (wire) | Session / JTI (`A0S…`) |
+| `user` | string | yes | User hex (`U0X…`) — **string, not object** |
+| `tenant` | string | yes | Tenant hex (`T0X…`) — **string, not object** |
+| `owner` | boolean | yes | Tenant owner |
+| `scopes` | string[] | yes | Flattened `"domain.scope"` patterns |
+| `deny` | string[] | yes | Deny patterns |
+| `tier` | string | yes | Plan slug (e.g. `free`) |
+| `ip` | string | yes | Always `""` in current handler |
+| `agent` | string | yes | Always `""` in current handler |
+
+SDK `Identity` may also keep `raw` (full payload) and optional `email` / `name` if present on other transports.
+
+## REST example (owner)
+
+```json
+{
+  "hex": "A0S1C3905B195668274E",
+  "user": "U0X3BFF58E91EC7",
+  "tenant": "T0X9E68DD4B15C6",
+  "owner": true,
+  "scopes": ["user.user.**", "tenant.tenant.**"],
+  "deny": [],
+  "tier": "free",
+  "ip": "",
+  "agent": ""
+}
+```
+
+## REST example (member)
+
+```json
+{
+  "hex": "A0SDFF10B7035B677847",
+  "user": "U0XC4DA9167DAD0",
+  "tenant": "T0X9E68DD4B15C6",
+  "owner": false,
+  "scopes": [
+    "user.mail.**",
+    "user.contacts.**",
+    "user.mailboxes.read",
+    "user.events.read.self",
+    "user.user.**",
+    "tenant.mail.**",
+    "tenant.contacts.**",
+    "tenant.mailboxes.read",
+    "tenant.events.read.self"
+  ],
+  "deny": [],
+  "tier": "free",
+  "ip": "",
+  "agent": ""
+}
 ```
 
 ```ts
 import Hermes from '@hermers/sdk';
-
-const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
-await hermes.ready(); // GET /auth/whoami
-
-console.log(hermes.me?.tenant, hermes.me?.user, hermes.me?.owner);
+const hermes = new Hermes('hm_live_…');
+await hermes.ready();
+console.log(hermes.me?.tenant, hermes.me?.user, hermes.me?.scopes);
 ```
 
-Resource methods never take tenant/user hex — they use the cached identity.
+See [Authentication & API keys](sdk/services/auth.md).
 
-See [Authentication & API keys](sdk/services/auth.md) and the [Session](grpc/services/session.md) client docs for SDK usage.
+## gRPC (`Session`)
 
-## gRPC (`@hermers/grpc`)
+| Field | Type |
+| --- | --- |
+| `hex` / `user` / `tenant` / `tier` / `ip` / `agent` | string |
+| `owner` | boolean |
+| `scopes` / `deny` | string[] |
+| `created` / `expires` / `refreshed` | timestamp / Date? |
 
 ```ts
 import { HermesGrpc } from '@hermers/grpc';
-
-const client = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
-await client.ready(); // SessionService.Whoami
-
+const client = new HermesGrpc('hm_live_…');
+await client.ready();
 console.log(client.me?.tenant, client.me?.user);
 client.close();
 ```
 
-Metadata: `authorization: Key hm_live_…`. See [Session](grpc/services/session.md).
-
-## Example fixtures
-
-JSON samples (owner vs member, REST vs gRPC) live in the Hermes monorepo under `sdk/whoami/` (mirrored in this repo at `guide/whoami/` for the server protocol tree — not part of this developer book):
-
-| File | Role |
-| --- | --- |
-| `owner.api.json` | Owner identity from REST whoami |
-| `member.api.json` | Member identity from REST whoami |
-| `owner.grpc.json` | Owner identity from gRPC Whoami |
-| `member.grpc.json` | Member identity from gRPC Whoami |
+See [Session](grpc/services/session.md).
 
 ## Auth model
 
-**API key only** in the published SDKs. There is no login, password, or JWT refresh helper in `@hermers/sdk` or `@hermers/grpc`. Browser/admin `POST /auth/login` exists on the HTTP API for UIs only — not wrapped by these packages.
+**API key only** in the published SDKs. Browser/admin `POST /auth/login` is not wrapped.

@@ -1,286 +1,286 @@
 # Types & enums
 
-Shared shapes used by `@hermers/sdk` and `@hermers/grpc`. Prefer TypeScript types exported from each package over copying these snippets.
+Shapes below are taken from Hermes **API / DB Serialize types** (`crates/api`, `crates/db`, `crates/core`). The TypeScript SDK may use looser or renamed fields — prefer these wire shapes when reading responses.
 
-## Identity (both clients)
+Timestamps serialize as naive datetime strings (`"2026-07-28T12:00:00"`). Enums use `#[serde(rename_all = "lowercase")]`.
 
-Cached on `client.me` after `ready()` / `whoami()`. Built from REST `GET /auth/whoami` or gRPC `SessionService.Whoami`.
+## Identity (whoami)
 
-```ts
-interface Identity {
-  hex?: string;      // session / JTI
-  user: string;      // user hex (U0X…)
-  tenant: string;    // tenant hex (T0X…)
-  owner?: boolean;   // true if key/session is a tenant owner
-  scopes?: string[]; // granted permission patterns
-  deny?: string[];   // denied permission patterns
-  tier?: string;     // plan slug, e.g. "free"
-  email?: string;    // present on some REST responses
-  name?: string;     // present on some REST responses
-  raw?: unknown;     // REST: full whoami JSON; gRPC: Session message
-}
+**Handler:** `crates/api/src/handlers/auth/whoami.rs` (ad-hoc `json!`).
+
+| Field | JSON type | Notes |
+| --- | --- | --- |
+| `hex` | string | Session JTI |
+| `user` | string | **User hex**, not an object |
+| `tenant` | string | **Tenant hex**, not an object |
+| `owner` | boolean | |
+| `scopes` | string[] | Flattened as `"domain.scope"` |
+| `deny` | string[] | Same flattening |
+| `tier` | string | Plan slug |
+| `ip` | string | Always `""` today |
+| `agent` | string | Always `""` today |
+
+Both SDKs cache this as `Identity` (`user` / `tenant` required). gRPC Whoami returns a proto `Session` with the same logical fields plus optional timestamps.
+
+## Page envelope
+
+**Type:** `main::Page<T>` — `crates/core/src/page.rs`
+
+| Field | Type | When present |
+| --- | --- | --- |
+| `items` | `T[]` | always |
+| `total` | number (i64) | always |
+| `next` | string | cursor mode only (last item `hex`) |
+| `page` | number | page mode only |
+| `pages` | number | page mode only |
+
+### Query (`PageRequest`)
+
+| Field | Type | Notes |
+| --- | --- | --- |
+| `after` | string? | cursor |
+| `page` | number? | if set → page mode |
+| `limit` | number? | default 50, max 200 |
+
+List SQL views often also put `total` on **each row** (window count).
+
+## REST error envelope
+
+**Type:** `crates/api/src/error.rs`
+
+```json
+{ "error": "forbidden", "message": "missing scope contacts:write" }
 ```
 
-| Field | Type | Required | Description |
-| --- | --- | --- | --- |
-| `hex` | `string` | no | Session / JTI identifier (`A0S…`) |
-| `user` | `string` | yes | Authenticated user hex |
-| `tenant` | `string` | yes | Authenticated tenant hex |
-| `owner` | `boolean` | no | Owner vs member |
-| `scopes` | `string[]` | no | Allow-list of scope patterns |
-| `deny` | `string[]` | no | Deny-list of scope patterns |
-| `tier` | `string` | no | Billing / plan tier slug |
-| `email` | `string` | no | REST only when returned by API |
-| `name` | `string` | no | REST only when returned by API |
-| `raw` | `unknown` / `Session` | no | Original wire payload |
+| Field | Type | Description |
+| --- | --- | --- |
+| `error` | string | Code: `not_found`, `unauthorized`, `forbidden`, `conflict`, `over_limit`, `validation`, `database`, `storage`, `kafka`, `internal` |
+| `message` | string | Human-readable detail |
 
-Resource methods never accept tenant/user hex from callers — they read `user` / `tenant` from this cache.
+HTTP status: 404 / 401 / 403 / 409 / 429 / 422 / 500. There is **no** nested `{ error: { code, message } }` and no `field` / `request_id` in the API crate today.
 
-### Example (owner, REST)
+`@hermers/sdk` throws `HermesError` after parsing this body. `@hermers/grpc` throws `HermesGrpcError` with gRPC status names.
+
+## Contacts (REST)
+
+### List row — `db::views::dav::contacts::Contacts`
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` | string | no |
+| `etag` | string | no |
+| `name` | string | yes |
+| `emails` | (string\|null)[] | no |
+| `phones` | (string\|null)[] | no |
+| `groups` | (string\|null)[] | no |
+| `created` | datetime | no |
+| `total` | number | no |
+
+### Create response — `db::models::dav::contacts::Contact`
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` | string | no |
+| `tenant` | string | no |
+| `user` | string | no |
+| `etag` | string | no |
+| `vcard` | string | no |
+| `name` | string | yes |
+| `emails` / `phones` / `groups` | (string\|null)[] | no |
+| `meta` | object | no |
+| `book` / `href` / `uid` / `version` | string | yes |
+| `size` | number | yes |
+| `deleted` | datetime | yes |
+| `created` / `updated` | datetime | no |
+
+There is **no** `GET /user/contacts/{hex}` route. `ContactDetail` exists in DB views but is unused by HTTP.
+
+Patch / delete handlers return JSON `null` (`Json(())`).
+
+## Mail (REST)
+
+### List message — `Messages`
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` | string | no |
+| `uid` | number | no |
+| `subject` / `sender` / `thread` | string | yes |
+| `size` | number | no |
+| `flags` | (string\|null)[] | no |
+| `spam` | number | yes |
+| `internaldate` | datetime | no — **not** `date` |
+| `mailbox` | `{ hex, name }` | no |
+| `total` | number | no |
+
+### Message detail view — `MessageDetail` (DB; no HTTP GET-by-hex today)
+
+Adds `structure?`, `modseq`, `created`, `blob: { hex, size, mime }`. List endpoints do not return this shape. Routes expose inbox/sent/… lists, send, flags, and delete — **not** `GET /user/mail/{hex}`.
+
+### Thread — `Threads`
+
+| Field | Type |
+| --- | --- |
+| `thread` | string |
+| `subject` | string? |
+| `count` / `unread` / `total` | number |
+| `latest` | datetime |
+| `mailbox` | `{ hex, name }` |
+
+### Mailbox list — `Mailboxes`
+
+| Field | Type |
+| --- | --- |
+| `hex` / `name` / `delimiter` | string |
+| `flags` | (string\|null)[] |
+| `uidvalidity` / `uidnext` / `messages` / `unread` / `total` | number |
+| `created` | datetime |
+
+List rows do **not** include `size` (that is on `MailboxDetail` / create model).
+
+## User (REST)
+
+### `GET /user` — full `User` model
+
+Password is skipped by serde.
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `email` / `name` | string | no |
+| `phone` / `bio` / `avatar` / `totp` | string | yes |
+| `owner` | boolean | no |
+| `state` | `"active"\|"suspended"\|"pending"\|"deleted"` | no |
+| `timezone` / `locale` | string | no |
+| `contacts` | object | yes |
+| `meta` | object | no |
+| `last` | datetime | yes |
+| `created` / `updated` | datetime | no |
+
+### `UserProfile` (POST `/user/lookup/profile` only)
+
+Adds nested:
+
+```json
+"tenant": { "hex", "name", "slug", "plan", "kind" },
+"role": { "hex", "label", "owner", "privileges", "kind" } | {}
+```
+
+Plus `bio`, `owner`, `timezone`, `locale`, `last` — no `id` / `meta` / `totp`.
+
+## Preferences
+
+Full `Preference` model on every preference PATCH response:
+
+| Field | Type |
+| --- | --- |
+| `id` | number |
+| `hex` / `user` | string |
+| `language` / `timezone` / `currency` | string |
+| `theme` | `"light"\|"dark"\|"auto"` |
+| `notifications` / `communication` / `privacy` / `display` / `regional` | object (freeform jsonb) |
+| `created` / `updated` | datetime |
+
+Only `/user/preferences/info` has a typed body: `{ language, timezone, currency, theme }`. Other sections accept **any JSON object** (size/depth validated).
+
+## Tenant, members, invitations
+
+### `TenantProfile`
+
+`hex`, `kind` (`personal`\|`team`), `name`, `slug`, `plan` (`free`…`enterprise`), `state`, `domain?`, `customer?`, `subscription?`, `trial?`, `meta`, `created`, `users`, `domains`, `storage`.
+
+### `Members` nested
+
+```json
+"tenant": { "hex", "name", "slug" },
+"role": { "label", "kind" } | {}
+```
+
+### `Invitations` list
+
+| Field | Type |
+| --- | --- |
+| `hex` / `email` / `label` / `status` | string (`pending`\|`accepted`\|`rejected`\|`expired`) |
+| `expires` / `created` | datetime |
+| `inviter` | `{ hex, name, email }` |
+| `total` | number |
+
+Detail adds `privileges`, `message?`, `tenant: { hex, name, slug }`.
+
+## Keys list — `Keys`
+
+| Field | Type |
+| --- | --- |
+| `hex` / `name` / `prefix` | string |
+| `active` | boolean |
+| `expires` / `last` | datetime? |
+| `created` | datetime |
+| `tenant` | `{ hex, name }` |
+| `user` | `{ hex, name, email }` \| null |
+| `total` | number |
+
+Detail adds `scopes` (jsonb). Create HTTP response is `{ "hex": "…" }` only; the SDK returns `{ hex, key }` by keeping the raw secret client-side.
+
+## Calendar / events / feeds
+
+### Calendar list — `Calendars`
+
+`hex`, `name`, `description?`, `color?`, `timezone`, `created`, `total`
+
+Create response: `{ hex, etag, sync_token }`
+
+### Event list — `Events`
+
+`hex`, `uid`, `start?`, `end?`, `created`, `total`
+
+Create/update response: `{ hex, etag, uid }`
+
+### Feed model (HTTP returns diesel model)
+
+`id`, `hex`, `tenant`, `user`, `connection`, `remote`, `name`, `color?`, `block`, `sync?`, `active`, `meta`, `last?`, `created`, `updated`
+
+## Scheduling
+
+### `Service` model
+
+Includes `id`, `hex`, `tenant`, `user`, `name`, `slug`, `description?`, `duration`, `buffer`, `notice`, `horizon`, `increment`, `max?`, `location` (object), `questions` (json), `active`, `meta`, `created`, `updated`.
+
+### `Appointment` model
+
+`status`: `pending`\|`confirmed`\|`cancelled`\|`completed`\|`noshow`.
+
+### `Window` model
+
+Not `{ day, start, end }` — full model: `id`, `hex`, `tenant`, `user`, `name`, `timezone`, `priority`, `start?`, `end?`, `busytype`, `rrule?`, `slots` (json), `active`, `meta`, `created`, `updated`.
+
+### `Override` model
+
+`id`, `hex`, `tenant`, `user`, `window?`, `start`, `end`, `available`, `reason?`, `created` — date range, not a single `date` field.
+
+### Availability
 
 ```json
 {
-  "hex": "A0S1C3905B195668274E",
-  "user": "U0X3BFF58E91EC7",
-  "tenant": "T0X9E68DD4B15C6",
-  "owner": true,
-  "scopes": ["user.user.**", "tenant.tenant.**"],
-  "deny": [],
-  "tier": "free",
-  "ip": "",
-  "agent": ""
+  "slots": [{ "start": "…", "end": "…" }],
+  "busy": [{ "start": "…", "end": "…", "title": null }]
 }
 ```
 
-Wire whoami may also include `ip` / `agent` (stored under `raw`, not promoted on the Identity interface for gRPC).
-
-## Page envelope (REST)
-
-List endpoints return a page envelope:
-
-```ts
-interface Page<T> {
-  items: T[];
-  total: number;
-  next?: string;   // cursor for next page (hex)
-  page?: number;   // 1-based page when using page/limit
-  pages?: number;  // total pages when using page/limit
-}
-```
-
-### List query
-
-```ts
-type ListQuery = {
-  after?: string;  // cursor hex
-  limit?: number;
-  page?: number;
-  group?: string;
-  search?: string;
-};
-```
-
-## REST resource types (`@hermers/sdk`)
-
-Exported from `@hermers/sdk` (`export type * from './types'`).
-
-### Contact / ContactDetail
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `hex` | `string` | Contact id |
-| `etag` | `string` | Concurrency token |
-| `name` | `string?` | Display name |
-| `emails` | `string[]?` | |
-| `phones` | `string[]?` | |
-| `groups` | `string[]?` | |
-| `created` | `string` | ISO-8601 |
-| `total` | `number?` | Present on list rows |
-| `vcard` | `string?` | Detail only |
-| `meta` | `Record<string, unknown>?` | Detail only |
-| `user` | `object?` | Detail only |
-
-### Message / MessageDetail
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `hex` | `string` | Message id |
-| `uid` | `number` | IMAP UID |
-| `subject` | `string?` | |
-| `sender` | `string?` | |
-| `size` | `number` | Bytes |
-| `flags` | `string[]?` | e.g. `\Seen` |
-| `thread` | `string?` | Thread id |
-| `spam` | `number?` | Score |
-| `date` | `string` | ISO-8601 |
-| `mailbox` | `object` | Nested mailbox summary |
-| `blob` | `string?` | Detail: blob hex |
-| `structure` | `object?` | Detail: MIME structure |
-
-### Mailbox
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `name` | `string` |
-| `delimiter` | `string` |
-| `flags` | `string[]?` |
-| `uidvalidity` | `number` |
-| `uidnext` | `number` |
-| `messages` | `number` |
-| `unread` | `number` |
-| `size` | `number` |
-| `created` | `string` |
-
-### Thread
-
-| Field | Type |
-| --- | --- |
-| `thread` | `string` |
-| `subject` | `string?` |
-| `count` | `number` |
-| `unread` | `number` |
-| `latest` | `string` |
-| `mailbox` | `object` |
-
-### UserProfile
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `email` | `string` |
-| `name` | `string` |
-| `phone` | `string?` |
-| `avatar` | `string?` |
-| `state` | `string?` |
-| `totp` | `boolean?` |
-| `meta` | `object?` |
-| `created` | `string` |
-
-### TenantProfile
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `kind` | `string` |
-| `name` | `string` |
-| `slug` | `string` |
-| `plan` | `string` |
-| `state` | `string` |
-| `domain` | `string?` |
-| `customer` | `string?` |
-| `subscription` | `string?` |
-| `trial` | `string?` |
-| `meta` | `object?` |
-| `created` | `string` |
-| `users` | `number` |
-| `domains` | `number` |
-| `storage` | `number` |
-
-### ApiKey
-
-| Field | Type | Notes |
-| --- | --- | --- |
-| `hex` | `string` | Key id |
-| `name` | `string` | Label |
-| `prefix` | `string?` | First chars of raw key |
-| `key` | `string?` | Raw secret — only on create path via SDK return |
-| `scopes` | `string[]` | |
-| `active` | `boolean?` | |
-| `expires` | `string?` | |
-| `last` | `string?` | Last used |
-| `created` | `string` | |
-
-### Other REST types
-
-Also exported: `Member`, `Domain`, `Invitation`, `Quota`, `Rule`, `RuleDetail`, `Webhook`, `WebhookDetail`, `Audit`, `Usage`, `Security`, `PreferenceDetail`, `Calendar`, `Event`, `Service`, `Appointment`, `Guest`, `Window`, `Override`, `Availability`, `Feed`, `Session`, `TenantSummary`.
-
-## Mail flags (gRPC)
-
-```ts
-enum Flag {
-  FLAG_SEEN = 0,
-  FLAG_ANSWERED = 1,
-  FLAG_FLAGGED = 2,
-  FLAG_DELETED = 3,
-  FLAG_DRAFT = 4,
-}
-```
-
-Exported as `MailFlag` from `@hermers/grpc`.
-
-## Spam verdict (gRPC)
-
-```ts
-enum Verdict {
-  CLEAN = 0,
-  SPAM = 1,
-  BULK = 2,
-}
-```
-
-Exported as `SpamVerdict` from `@hermers/grpc`.
-
-## Tier plan (gRPC)
-
-```ts
-enum Plan {
-  FREE = 0,
-  STARTER = 1,
-  PRO = 2,
-  BUSINESS = 3,
-  ENTERPRISE = 4,
-}
-```
-
-Exported as `TierPlan` from `@hermers/grpc`.
-
-## Errors
-
-### REST — `HermesError`
-
-Thrown for non-2xx responses and some client-side failures.
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `message` | `string` | Human-readable error |
-| `status` | `number` | HTTP status (`0` for network / client errors) |
-| `code` | `string` | API code or `http_error` / `network_error` / `invalid_api_key` / `invalid_identity` |
-| `field` | `string?` | Field that failed validation |
-| `requestId` | `string?` | From `error.request_id` or `error.request` |
-| `body` | `unknown?` | Parsed response body |
-
-Wire envelope:
+### Public book response
 
 ```json
-{
-  "error": {
-    "code": "forbidden",
-    "message": "missing scope contacts:write",
-    "field": null,
-    "request_id": "…"
-  }
-}
+{ "appointment": { /* Appointment */ }, "guest": { /* Guest */ } }
 ```
+
+(Not `appt`.)
+
+## gRPC enums (from proto / ts-proto)
 
 ```ts
-try {
-  await hermes.contacts.create({ vcard: '…' });
-} catch (e) {
-  if (e instanceof HermesError) {
-    console.error(e.status, e.code, e.message, e.requestId);
-  }
-}
+enum Flag { FLAG_SEEN=0, FLAG_ANSWERED=1, FLAG_FLAGGED=2, FLAG_DELETED=3, FLAG_DRAFT=4 } // MailFlag
+enum Verdict { CLEAN=0, SPAM=1, BULK=2 } // SpamVerdict
+enum Plan { FREE=0, STARTER=1, PRO=2, BUSINESS=3, ENTERPRISE=4 } // TierPlan
 ```
 
-### gRPC — `HermesGrpcError`
-
-| Property | Type | Description |
-| --- | --- | --- |
-| `message` | `string` | Details or status name |
-| `code` | `string` | gRPC status name (`UNAUTHENTICATED`, `PERMISSION_DENIED`, …) |
-| `grpcCode` | `number?` | Numeric `@grpc/grpc-js` status |
-| `details` | `string?` | Server details string |
-| `metadata` | `Metadata?` | Trailing metadata |
-
-There is **no** SDK `Token` type for login/refresh — API keys only.
+See per-service gRPC pages for message field tables.

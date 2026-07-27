@@ -1,6 +1,8 @@
 # Tenant (`hermes.tenant`)
 
-Tenant administration under `/tenant/*`. No signup/password flows. API keys are created via [`hermes.keys.create()`](auth.md).
+Tenant administration under `/tenant/*`. API keys: [`hermes.keys`](auth.md).
+
+**Sources:** `crates/api/src/handlers/tenant/org/*`, `crates/db/src/views/platform/{tenants,users,invitations}.rs`, `crates/db/src/views/{billing,spam,api}/*`, `crates/api/src/handlers/tenant/org/security/status.rs`.
 
 ```ts
 const tenant = await hermes.tenant.retrieve();
@@ -9,155 +11,133 @@ const members = await hermes.tenant.members({ limit: 50 });
 
 ## Profile
 
-| Method | Signature | HTTP | Returns |
-| --- | --- | --- | --- |
-| `retrieve` | `() => Promise<TenantProfile>` | `GET /tenant` | Profile |
-| `update` | `({ name }) => Promise<TenantProfile>` | `PATCH /tenant/edit` | Profile |
-| `view` | `(hex) => Promise<TenantProfile>` | `GET /tenant/view/{hex}` | Profile |
-| `bySlug` | `(slug) => Promise<TenantSummary>` | `GET /tenant/view/slug/{slug}` | Summary |
+| SDK | HTTP | Returns |
+| --- | --- | --- |
+| `retrieve()` | `GET /tenant` | `TenantProfile` |
+| `update({ name })` | `PATCH /tenant/edit` | full `Tenant` model |
+| `view(hex)` | `GET /tenant/view/{hex}` | `TenantProfile` |
+| `bySlug(slug)` | `GET /tenant/view/slug/{slug}` | `Tenant` model |
 
 ### `TenantProfile`
 
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` / `kind` / `name` / `slug` / `plan` / `state` | string | no |
+| `domain` / `customer` / `subscription` | string | yes |
+| `trial` | datetime | yes |
+| `meta` | object | no |
+| `created` | datetime | no |
+| `users` / `domains` / `storage` | number | no |
+
+`kind`: `personal`\|`team`. `plan`: `free`\|`starter`\|`pro`\|`business`\|`enterprise`. `state`: `active`\|`suspended`\|`pending`\|`deleted`.
+
+## Members — `Page<Members>`
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` / `email` / `name` / `state` | string | no |
+| `avatar` | string | yes |
+| `owner` | boolean | no |
+| `last` | datetime | yes |
+| `created` | datetime | no |
+| `tenant` | `{ hex, name, slug }` | no |
+| `role` | `{ label, kind }` or `{}` | no |
+| `total` | number | no |
+
+```json
+{
+  "hex": "U0X…",
+  "email": "ada@example.com",
+  "name": "Ada",
+  "avatar": null,
+  "owner": false,
+  "state": "active",
+  "last": null,
+  "created": "2026-01-01T00:00:00",
+  "tenant": { "hex": "T0X…", "name": "Acme", "slug": "acme" },
+  "role": { "label": "member", "kind": "permanent" },
+  "total": 3
+}
+```
+
+| SDK | Returns |
+| --- | --- |
+| `members` / `activeMembers` / `owners` / `searchMembers` | `Page<Members>` |
+| `invite({ email, role? })` | `{ invite: string, token: string }` |
+| `removeMember(user)` | typically `null` / ack |
+
+## Invitations — `Page<Invitations>`
+
 | Field | Type |
 | --- | --- |
-| `hex` | `string` |
-| `kind` | `string` |
-| `name` | `string` |
-| `slug` | `string` |
-| `plan` | `string` |
-| `state` | `string` |
-| `domain` | `string?` |
-| `customer` | `string?` |
-| `subscription` | `string?` |
-| `trial` | `string?` |
-| `meta` | `object?` |
-| `created` | `string` |
-| `users` | `number` |
-| `domains` | `number` |
-| `storage` | `number` |
+| `hex` / `email` / `label` / `status` | string |
+| `expires` / `created` | datetime |
+| `inviter` | `{ hex, name, email }` |
+| `total` | number |
 
-### `TenantSummary`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `name` | `string` |
-| `slug` | `string` |
-| `kind` | `string` |
-| `state` | `string` |
-| `created` | `string` |
-
-## Members
-
-| Method | Returns |
-| --- | --- |
-| `members(query?)` | `Promise<Page<Member>>` |
-| `activeMembers(query?)` | `Promise<Page<Member>>` |
-| `owners(query?)` | `Promise<Page<Member>>` |
-| `searchMembers(q)` | `Promise<Page<Member>>` |
-| `invite({ email, role? })` | `Promise<{ invite: string; token: string }>` |
-| `removeMember(user)` | `Promise<{ ok: boolean }>` |
-
-### `Member`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `email` | `string` |
-| `name` | `string` |
-| `avatar` | `string?` |
-| `owner` | `boolean` |
-| `state` | `string` |
-| `last` | `string?` |
-| `created` | `string` |
-| `tenant` | `object` |
-| `role` | `object` |
+`status`: `pending`\|`accepted`\|`rejected`\|`expired`.
 
 ## Domains
 
-| Method | Returns |
-| --- | --- |
-| `createDomain({ name, kind, selector?, meta? })` | `Promise<{ hex: string }>` |
-| `domains(query?)` | `Promise<Page<Domain>>` |
-| `retrieveDomain(hex)` | `Promise<Domain>` |
-| `deleteDomain(hex)` | `Promise<{ ok: boolean }>` |
+**Create body:** `{ name, kind?, selector?, meta? }` → `{ hex }`.  
+`kind`: `primary`\|`sending`\|`receiving`\|`alias`.
 
-### `Domain`
+**List row:** `hex`, `name`, `kind`, `status`, `verified?`, `created`, `tenant: { hex, name, slug }`, `total`.
+
+## Quotas — `Page<Quotas>`
 
 | Field | Type |
 | --- | --- |
-| `hex` | `string` |
-| `name` | `string` |
-| `kind` | `string` |
-| `status` | `string` |
-| `selector` | `string?` |
-| `dkim` | `string?` |
-| `spf` | `object?` |
-| `dmarc` | `object?` |
-| `verified` | `string?` |
-| `created` | `string` |
-| `mailboxes` | `number?` |
+| `tenant` / `metric` | string |
+| `ceiling` | number |
+| `expires` | datetime? |
+| `created` | datetime |
+| `total` | number |
 
-## Quotas, rules, webhooks, usage, security
+Create body: `{ metric, ceiling, reason?, granted?, expires? }` → full quota model.
 
-| Method | Returns |
-| --- | --- |
-| `invitations(query?)` | `Promise<Page<Invitation>>` |
-| `quotas(query?)` | `Promise<Page<Quota>>` |
-| `createQuota({ metric, ceiling, … })` | `Promise<Quota>` |
-| `rules(query?)` | `Promise<Page<Rule>>` |
-| `createRule({ name, target, pattern, score, active, meta? })` | `Promise<Rule>` |
-| `retrieveRule(hex)` | `Promise<RuleDetail>` |
-| `webhooks(query?)` | `Promise<Page<Webhook>>` |
-| `createWebhook({ url, secret, events, … })` | `Promise<{ hex: string }>` |
-| `retrieveWebhook(hex)` | `Promise<WebhookDetail>` |
-| `deleteWebhook(hex)` | `Promise<{ ok: boolean }>` |
-| `security()` | `Promise<Security>` |
-| `usage(query?)` | `Promise<Page<Usage>>` |
-| `usageSummary()` | `Promise<Usage[]>` |
-
-### `Quota`
+## Rules — `Page<Rules>`
 
 | Field | Type |
 | --- | --- |
-| `tenant` | `string` |
-| `metric` | `string` |
-| `ceiling` | `number` |
-| `expires` | `string?` |
-| `created` | `string` |
+| `hex` / `target` / `pattern` / `name` | string |
+| `score` | number |
+| `active` | boolean |
+| `created` | datetime |
+| `tenant` | `{ hex, name }` \| null |
+| `total` | number |
 
-### `Usage`
+`target` values include `header.from`, `header.to`, `body.text`, `envelope.from`, … (see API data validation).
 
-| Field | Type |
-| --- | --- |
-| `tenant` | `string` |
-| `metric` | `string` |
-| `window` | `string` |
-| `value` | `number` |
-| `ceiling` | `number` |
+Detail (`RuleDetail`) adds `meta` object.
 
-### `Security`
+## Webhooks
 
-| Field | Type |
-| --- | --- |
-| `mtasts` | `{ domain, policy, expires }[]` |
-| `tlsa` | `{ host, port, records, expires }[]` |
-| `bimi` | `{ domain, location?, vmc?, expires }[]` |
-| `reports` | `{ hex, kind, domain, period, received }[]` |
+**Create:** `{ url, secret, events?, domains?, active?, meta? }` → `{ hex }`.  
+**List:** `hex`, `url`, `active`, `created`, `tenant: { hex, name }`, `total`.  
+**Detail:** adds `events` (jsonb); model may include `secret`, `domains`, `meta`.
 
-### `WebhookDetail`
+## Usage — `Page<Usages>` / summary array
 
 | Field | Type |
 | --- | --- |
-| `hex` | `string` |
-| `url` | `string` |
-| `active` | `boolean` |
-| `secret` | `string?` |
-| `events` | `string[]?` |
-| `domains` | `string[]?` |
-| `meta` | `object?` |
-| `created` | `string` |
+| `tenant` / `metric` | string |
+| `window` | date (`YYYY-MM-DD`) |
+| `value` / `ceiling` / `total` | number |
+
+## Security — `GET /tenant/security`
+
+```json
+{
+  "mtasts": [{ "domain": "…", "policy": {}, "expires": "…" }],
+  "tlsa": [{ "host": "…", "port": 25, "records": {}, "expires": "…" }],
+  "bimi": [{ "domain": "…", "location": null, "vmc": null, "expires": "…" }],
+  "reports": [{ "hex": "…", "kind": "…", "domain": "…", "period": "2026-07-01", "received": "…" }]
+}
+```
+
+Note REST uses `policy` / `records` objects (not `policyJson` / `recordsJson` — those names are gRPC-generated).
 
 ## Errors
 
-Owner/admin scopes required for many mutations. Throws `HermesError` (`403` / `404` / `400`).
+`{ "error": "…", "message": "…" }` — see [Types](../../types/index.md).

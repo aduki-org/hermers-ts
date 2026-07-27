@@ -2,98 +2,60 @@
 
 Calendar events under `/user/events`.
 
+**Sources:** `crates/api/src/handlers/tenant/user/events/*`, `crates/db/src/views/dav/events.rs`.
+
 ```ts
 const page = await hermes.events.list({ limit: 50 });
-const upcoming = await hermes.events.upcoming();
 const created = await hermes.events.create({
   calendar: 'L0X…',
   uid: 'evt-1@example.com',
   ical: 'BEGIN:VCALENDAR\n…\nEND:VCALENDAR',
   summary: 'Sync',
-  start: '2026-08-01T10:00:00Z',
-  end: '2026-08-01T11:00:00Z',
+  start: '2026-08-01T10:00:00',
+  end: '2026-08-01T11:00:00',
 });
+// { hex, etag, uid }
 ```
 
 ## Methods
 
-| Method | Signature | HTTP | Returns |
-| --- | --- | --- | --- |
-| `list` | `(query?) => Promise<Page<Event>>` | `GET /user/events` | Page |
-| `range` | `(start, end) => Promise<Page<Event>>` | `GET /user/events/range/{start}/{end}` | Page |
-| `recurring` | `() => Promise<Page<Event>>` | `GET /user/events/recurring` | Page |
-| `search` | `(q) => Promise<Page<Event>>` | `GET /user/events/search/{q}` | Page |
-| `upcoming` | `() => Promise<Page<Event>>` | `GET /user/events/upcoming` | Page |
-| `past` | `() => Promise<Page<Event>>` | `GET /user/events/past` | Page |
-| `create` | `(data) => Promise<{ hex; etag; uid }>` | `POST /user/events` | Ids |
-| `update` | `(hex, data) => Promise<{ hex; etag; uid }>` | `PATCH /user/events/{hex}` | Ids |
-| `del` | `(hex) => Promise<void>` | `DELETE /user/events/{hex}` | Empty |
+| SDK | HTTP | Returns |
+| --- | --- | --- |
+| `list` / `range` / `recurring` / `search` / `upcoming` / `past` | `GET /user/events…` | `Page<Events>` |
+| `create(data)` | `POST /user/events` | `{ hex, etag, uid }` |
+| `update(hex, data)` | `PATCH /user/events/{hex}` | `{ hex, etag, uid }` |
+| `del(hex)` | `DELETE /user/events/{hex}` | `null` |
 
-## Request: `create`
+## Create request
 
 | Field | Type | Required |
 | --- | --- | --- |
-| `calendar` | `string` | yes — calendar hex |
-| `uid` | `string` | yes — iCal UID |
-| `ical` | `string` | yes — iCalendar payload |
-| `href` | `string` | no |
-| `start` | `string` | no — ISO-8601 |
-| `end` | `string` | no |
-| `summary` | `string` | no |
-| `description` | `string` | no |
-| `location` | `string` | no |
-| `attendees` | `string[]` | no |
-| `recurring` | `boolean` | no |
-| `kind` | `string` | no |
-| `rrule` | `string` | no |
-| `timezone` | `string` | no |
+| `calendar` | string | yes |
+| `uid` | string | yes |
+| `ical` | string | yes |
+| `href` | string | no |
+| `start` / `end` | datetime string | no |
+| `summary` / `description` / `location` / `kind` / `rrule` / `timezone` | string | no |
+| `attendees` | string[] | no |
+| `recurring` | boolean | no |
 
-## Request: `update`
+## List item (`Events`)
 
-| Field | Type |
-| --- | --- |
-| `ical` | `string?` |
-| `summary` | `string?` |
-| `description` | `string?` |
-| `location` | `string?` |
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` / `uid` | string | no |
+| `start` / `end` | datetime | yes |
+| `created` | datetime | no |
+| `total` | number | no |
 
-## Returns
+List rows do **not** include `summary` / `ical` / `attendees`. Those appear on create body and on `EventDetail` (`ical`, `etag`, `calendar: { hex, name }`) when a detail route is used.
 
-### `Event`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `uid` | `string` |
-| `start` | `string?` |
-| `end` | `string?` |
-| `created` | `string` |
-| `ical` | `string?` |
-| `href` | `string?` |
-| `summary` | `string?` |
-| `description` | `string?` |
-| `location` | `string?` |
-| `attendees` | `string[]?` |
-| `recurring` | `boolean?` |
-| `kind` | `string?` |
-| `rrule` | `string?` |
-| `timezone` | `string?` |
-| `total` | `number?` |
-
-### Create / update response
-
-```ts
-{ hex: string; etag: string; uid: string }
-```
+## Create / update response
 
 ```json
-{
-  "hex": "E0X…",
-  "etag": "\"1\"",
-  "uid": "evt-1@example.com"
-}
+{ "hex": "E0X…", "etag": "\"1\"", "uid": "evt-1@example.com" }
 ```
 
 ## Errors
 
-Unknown calendar/event → `404`. Invalid iCal → `400`. Throws `HermesError`.
+`{ "error": "…", "message": "…" }` — see [Types](../../types/index.md).

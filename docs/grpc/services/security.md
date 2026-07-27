@@ -24,12 +24,12 @@ No request fields (empty `StatusReq`).
 | `bimi` | `BimiEntry[]` | BIMI records |
 | `reports` | `ReportEntry[]` | Received reports |
 
-### `MtastsEntry`
+### `MtastsEntry` (proto / ts-proto)
 
 | Field | Type |
 | --- | --- |
 | `domain` | `string` |
-| `policyJson` | `string` — JSON policy document |
+| `policyJson` | `string` — policy document as JSON **string** |
 | `expires` | `string` |
 
 ### `TlsaEntry`
@@ -40,6 +40,8 @@ No request fields (empty `StatusReq`).
 | `port` | `number` |
 | `recordsJson` | `string` |
 | `expires` | `string` |
+
+REST `/tenant/security` uses object fields `policy` / `records` instead of these string fields — see [Tenant](../../sdk/services/tenant.md).
 
 ### `BimiEntry`
 

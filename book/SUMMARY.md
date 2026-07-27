@@ -19,6 +19,7 @@
 - [Tenant](sdk/services/tenant.md)
 - [Calendar](sdk/services/calendar.md)
 - [Events](sdk/services/events.md)
+- [Feeds](sdk/services/feeds.md)
 - [Scheduling](sdk/services/scheduling.md)
 
 # gRPC SDK

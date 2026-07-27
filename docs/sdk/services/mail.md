@@ -1,114 +1,45 @@
 # Mail (`hermes.mail`)
 
-Messages and mailboxes under `/user/mail` and `/user/mailbox`. Identity from whoami; never pass tenant/user hex.
+Messages and mailboxes under `/user/mail` and `/user/mailbox`.
+
+**Sources:** `crates/api/src/handlers/tenant/user/mail/*`, `mailbox/*`, `crates/api/src/data/tenant/user/mailbox.rs`, `crates/db/src/views/mail/{messages,mailboxes,threads}.rs`, `crates/db/src/models/mail/mailboxes.rs`.
 
 ```ts
 const page = await hermes.mail.inbox({ limit: 50 });
-const detail = await hermes.mail.retrieve(page.items[0].hex);
+// page.items[0].internaldate — not `.date`
 const boxes = await hermes.mail.listMailboxes();
 ```
 
-## Messages
+## Message list endpoints
 
-| Method | Signature | HTTP | Returns |
-| --- | --- | --- | --- |
-| `send` | `(data) => Promise<{ hex: string }>` | `POST /user/mail/send` | New message hex |
-| `inbox` | `(query?) => Promise<Page<Message>>` | `GET /user/mail/inbox` | Page |
-| `unread` | `(query?) => Promise<Page<Message>>` | `GET …/inbox/unread` | Page |
-| `flagged` | `(query?) => Promise<Page<Message>>` | `GET …/inbox/flagged` | Page |
-| `attachments` | `(query?) => Promise<Page<Message>>` | `GET …/inbox/attachments` | Page |
-| `bySender` | `(sender, query?) => Promise<Page<Message>>` | `GET …/inbox/sender/{sender}` | Page |
-| `sent` | `(query?) => Promise<Page<Message>>` | `GET /user/mail/sent` | Page |
-| `byRecipient` | `(recipient, query?) => Promise<Page<Message>>` | `GET …/sent/recipient/{…}` | Page |
-| `drafts` | `(query?) => Promise<Page<Message>>` | `GET /user/mail/draft` | Page |
-| `trash` | `(query?) => Promise<Page<Message>>` | `GET /user/mail/trash` | Page |
-| `starred` | `(query?) => Promise<Page<Message>>` | `GET /user/mail/starred` | Page |
-| `spam` | `(query?) => Promise<Page<Message>>` | `GET /user/mail/spam` | Page |
-| `scored` | `(score: number) => Promise<Page<Message>>` | `GET …/spam/scored/{score}` | Page |
-| `folder` | `(folder, query?) => Promise<Page<Message>>` | `GET /user/mail/folder/{folder}` | Page |
-| `search` | `(q) => Promise<Page<Message>>` | `GET /user/mail/search/{q}` | Page |
-| `searchAdvanced` | `(q, { mailbox?, sender? }) => Promise<Page<Message>>` | `POST …/search/{q}/advanced` | Page |
-| `threads` | `(query?) => Promise<Page<Thread>>` | `GET /user/mail/threads` | Page |
-| `thread` | `(thread) => Promise<Page<Message>>` | `GET /user/mail/thread/{thread}` | Page |
-| `retrieve` | `(hex) => Promise<MessageDetail>` | `GET /user/mail/{hex}` | Detail |
-| `del` | `(hex) => Promise<void>` | `DELETE /user/mail/{hex}` | Empty / `{}` |
-| `clearMailbox` | `(mailbox) => Promise<void>` | `DELETE /user/mail/mailbox/{mailbox}` | Empty |
-| `updateFlags` | `(hex, { add?, remove? }) => Promise<void>` | `PATCH /user/mail/{hex}/flags` | Empty |
+All return `Page<Messages>` (`db::views::mail::messages::Messages`).
 
-### `send` body
+| SDK | HTTP |
+| --- | --- |
+| `inbox` / `unread` / `flagged` / `attachments` | `GET /user/mail/inbox[…]` |
+| `bySender(sender)` | `GET /user/mail/inbox/sender/{sender}` |
+| `sent` / `byRecipient` | `GET /user/mail/sent[…]` |
+| `drafts` / `trash` / `starred` / `spam` / `scored` | `GET /user/mail/…` |
+| `folder` / `search` | `GET /user/mail/folder|search/…` |
+| `searchAdvanced(q, body)` | `POST /user/mail/search/{q}/advanced` |
+| `threads` | `GET /user/mail/threads` → `Page<Threads>` |
+| `thread(id)` | `GET /user/mail/thread/{thread}` → `Page<Messages>` |
 
-| Field | Type | Required |
+### `Messages` (list row)
+
+| Field | Type | Nullable |
 | --- | --- | --- |
-| `from` | `string` | yes |
-| `to` | `string` | yes |
-| `subject` | `string` | yes |
-| `text` | `string` | yes |
-
-Returns `{ hex: string }`.
-
-## Mailboxes
-
-| Method | Signature | HTTP | Returns |
-| --- | --- | --- | --- |
-| `createMailbox` | `(data) => Promise<Mailbox>` | `POST /user/mailbox` | Mailbox |
-| `listMailboxes` | `(query?) => Promise<Page<Mailbox>>` | `GET /user/mailbox` | Page |
-| `unreadMailboxes` | `() => Promise<Page<Mailbox>>` | `GET /user/mailbox/unread` | Page |
-| `emptyMailboxes` | `() => Promise<Page<Mailbox>>` | `GET /user/mailbox/empty` | Page |
-| `mailboxByName` | `(name) => Promise<Page<Mailbox>>` | `GET …/name/{name}` | Page |
-| `searchMailboxes` | `(q) => Promise<Page<Mailbox>>` | `GET …/search/{q}` | Page |
-| `updateMailbox` | `(hex, data) => Promise<Mailbox>` | `PATCH …/{hex}/basic` | Mailbox |
-| `renameMailbox` | `(hex, name) => Promise<Mailbox>` | `PATCH …/{hex}/name` | Mailbox |
-| `deleteMailbox` | `(hex) => Promise<void>` | `DELETE /user/mailbox/{hex}` | Empty |
-
-## Return types
-
-### `Message`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `uid` | `number` |
-| `subject` | `string?` |
-| `sender` | `string?` |
-| `size` | `number` |
-| `flags` | `string[]?` |
-| `thread` | `string?` |
-| `spam` | `number?` |
-| `date` | `string` |
-| `mailbox` | `object` |
-| `total` | `number?` |
-
-### `MessageDetail`
-
-`Message` plus `blob?: string`, `structure?: object`.
-
-### `Thread`
-
-| Field | Type |
-| --- | --- |
-| `thread` | `string` |
-| `subject` | `string?` |
-| `count` | `number` |
-| `unread` | `number` |
-| `latest` | `string` |
-| `mailbox` | `object` |
-
-### `Mailbox`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `name` | `string` |
-| `delimiter` | `string` |
-| `flags` | `string[]?` |
-| `uidvalidity` | `number` |
-| `uidnext` | `number` |
-| `messages` | `number` |
-| `unread` | `number` |
-| `size` | `number` |
-| `created` | `string` |
-
-### Example inbox page
+| `hex` | string | no |
+| `uid` | number | no |
+| `subject` | string | yes |
+| `sender` | string | yes |
+| `size` | number | no |
+| `flags` | (string\|null)[] | no |
+| `thread` | string | yes |
+| `spam` | number | yes |
+| `internaldate` | datetime | no |
+| `mailbox` | object | no → `{ "hex": string, "name": string }` |
+| `total` | number | no |
 
 ```json
 {
@@ -119,9 +50,12 @@ Returns `{ hex: string }`.
       "subject": "Hello",
       "sender": "ada@example.com",
       "size": 1024,
-      "flags": ["\\Seen"],
-      "date": "2026-07-28T12:00:00Z",
-      "mailbox": { "hex": "…", "name": "INBOX" }
+      "flags": ["\\\\Seen"],
+      "thread": null,
+      "spam": null,
+      "internaldate": "2026-07-28T12:00:00",
+      "mailbox": { "hex": "MB0X…", "name": "INBOX" },
+      "total": 1
     }
   ],
   "total": 1,
@@ -129,6 +63,88 @@ Returns `{ hex: string }`.
 }
 ```
 
+### `Threads`
+
+| Field | Type |
+| --- | --- |
+| `thread` | string |
+| `subject` | string? |
+| `count` / `unread` / `total` | number |
+| `latest` | datetime |
+| `mailbox` | `{ hex, name }` |
+
+## Send
+
+`POST /user/mail/send` — body `{ from, to, subject, text }` (`to` is a **single string**).
+
+Response: `{ "hex": "…" }`.
+
+## Flags / delete
+
+| SDK | HTTP | Returns |
+| --- | --- | --- |
+| `updateFlags(hex, { add?, remove? })` | `PATCH /user/mail/{hex}/flags` | empty / `null` |
+| `del(hex)` | `DELETE /user/mail/{hex}` | empty / `null` |
+| `clearMailbox(mailbox)` | `DELETE /user/mail/mailbox/{mailbox}` | empty / `null` |
+
+**No `GET /user/mail/{hex}`** in the API routes. The SDK `retrieve` method is not backed by HTTP. A `MessageDetail` view exists in DB (`structure?`, `modseq`, `created`, `blob: { hex, size, mime }`) but is not exposed here.
+
+## Mailboxes
+
+### Create — `MailboxData` request
+
+| Field | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `name` | string | **yes** | max 255 |
+| `role` | string | no | `inbox`\|`sent`\|`drafts`\|`trash`\|`junk`\|`archive`\|`flagged`\|`all`\|`important`\|`templates` |
+| `child` | string | no | |
+| `unread` | number | no | |
+| `empty` | boolean | no | |
+| `messages` | number | no | |
+| `search` | boolean | no | |
+| `uidnext` | number | no | |
+| `flags` | string[] | no | |
+| `subscribed` | boolean | no | |
+| `parent` | string | no | parent mailbox hex |
+| `quota` | number | no | |
+| `acl` | object | no | |
+| `meta` | object | no | |
+
+### Create response — `Mailbox` model
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `user` / `name` / `delimiter` | string | no |
+| `flags` | (string\|null)[] | no |
+| `uidvalidity` / `uidnext` / `modseq` | number | no |
+| `meta` / `acl` | object | no |
+| `role` | string | yes (lowercase) |
+| `subscribed` | boolean | no |
+| `parent` | string | yes |
+| `quota` | number | yes |
+| `created` / `updated` | datetime | no |
+
+### List — `Mailboxes` (`Page<Mailboxes>`)
+
+| Field | Type |
+| --- | --- |
+| `hex` / `name` / `delimiter` | string |
+| `flags` | (string\|null)[] |
+| `uidvalidity` / `uidnext` / `messages` / `unread` / `total` | number |
+| `created` | datetime |
+
+No `size` on list rows.
+
+| SDK | HTTP |
+| --- | --- |
+| `createMailbox` | `POST /user/mailbox` |
+| `listMailboxes` / `unreadMailboxes` / `emptyMailboxes` | `GET /user/mailbox[…]` |
+| `mailboxByName` / `searchMailboxes` | `GET …/name|search/…` |
+| `updateMailbox` | `PATCH /user/mailbox/{hex}/basic` |
+| `renameMailbox` | `PATCH /user/mailbox/{hex}/name` |
+| `deleteMailbox` | `DELETE /user/mailbox/{hex}` → `null` |
+
 ## Errors
 
-Missing `mail:read` / `mail:write` → `403`. Unknown message → `404`. Throws `HermesError`.
+`{ "error": "…", "message": "…" }` — see [Types](../../types/index.md).

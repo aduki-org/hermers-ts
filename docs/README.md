@@ -48,7 +48,7 @@ gRPC metadata: `authorization: Key hm_live_…`.
 
 There are **no** login, password, or JWT refresh helpers in either package. Browser login (`POST /auth/login`) exists on the HTTP API for admin UIs only — not in the SDKs.
 
-On construction each client starts whoami and caches identity. Prefer `await client.ready()` before the first resource call (or rely on lazy await inside resource methods).
+On construction each client starts whoami and caches identity (`hex`, `user`, `tenant`, `owner`, `scopes`, `deny`, `tier`, `ip`, `agent`). Prefer `await client.ready()` before the first resource call. Field tables: [Types](types/index.md) and the Whoami chapter in the book.
 
 ## Hosts
 
@@ -84,7 +84,7 @@ Developer docs for SDK consumers live in this folder (`docs/`) and are what the 
 ### REST resources
 
 - [Contacts](sdk/services/contacts.md) · [Mail](sdk/services/mail.md) · [User](sdk/services/user.md) · [Tenant](sdk/services/tenant.md)
-- [Keys](sdk/services/auth.md) · [Calendar](sdk/services/calendar.md) · [Events](sdk/services/events.md) · [Scheduling](sdk/services/scheduling.md)
+- [Keys](sdk/services/auth.md) · [Calendar](sdk/services/calendar.md) · [Events](sdk/services/events.md) · [Feeds](sdk/services/feeds.md) · [Scheduling](sdk/services/scheduling.md)
 
 ### gRPC resources
 

@@ -2,6 +2,8 @@
 
 Stripe/Square-style root client. Pass an API key; call resource methods. Tenant and user come from whoami — never pass hex IDs.
 
+Wire JSON shapes in these docs are taken from `crates/api` handlers and `crates/db` Serialize views/models — not from guessed SDK TypeScript types.
+
 ## Install
 
 ```bash
@@ -22,97 +24,43 @@ await hermes.ready();
 | Base URL | `https://hermers.aduki.pro/v1` (`BASE_URL`) |
 | Auth | `Authorization: Key <apiKey>` |
 
-Local override:
-
-```ts
-const hermes = new Hermes(process.env.HERMERS_API_KEY!, {
-  apiBase: 'http://127.0.0.1:8443/v1',
-});
-```
-
 ## Identity
 
-| API | Signature | Behavior |
-| --- | --- | --- |
-| `ready()` | `(): Promise<Identity>` | Awaits `GET /auth/whoami`, caches identity |
-| `whoami()` | `(): Promise<Identity>` | Same; returns cache after first success |
-| `me` | `Identity \| undefined` | Sync snapshot until ready |
+| API | Behavior |
+| --- | --- |
+| `ready()` / `whoami()` | `GET /auth/whoami` → cache |
+| `me` | Cached identity or `undefined` |
 
-```ts
-export interface Identity {
-  hex?: string;       // session / JTI
-  user: string;       // user hex — required
-  tenant: string;     // tenant hex — required
-  owner?: boolean;
-  scopes?: string[];
-  deny?: string[];
-  tier?: string;
-  email?: string;
-  name?: string;
-  raw?: unknown;      // full whoami JSON (may include ip, agent)
-}
-```
-
-Full field tables and sample JSON: [Authentication & keys](services/auth.md), [Types](../types/index.md).
+Whoami fields: `hex`, `user`, `tenant`, `owner`, `scopes`, `deny`, `tier`, `ip`, `agent` — see [Auth](services/auth.md).
 
 ## Resources
 
-| Property | Class | Notes |
-| --- | --- | --- |
-| `contacts` | `ContactsResource` | CardDAV CRUD — [docs](services/contacts.md) |
-| `mail` | `MailResource` | Messages + mailboxes — [docs](services/mail.md) |
-| `keys` | `KeysResource` | List / create / revoke — [docs](services/auth.md) |
-| `user` | `UserResource` | Profile, sessions, audits — [docs](services/user.md) |
-| `tenant` | `TenantResource` | Members, domains, quotas, … — [docs](services/tenant.md) |
-| `calendar` | `CalendarResource` | Calendars — [docs](services/calendar.md) |
-| `events` | `EventsResource` | Events — [docs](services/events.md) |
-| `feeds` | `FeedsResource` | External calendar feeds |
-| `scheduling` | `SchedulingResource` | Booking — [docs](services/scheduling.md) |
-
-There is **no** `hermes.auth` login surface. Use an API key from the dashboard / `hermes.keys.create()`.
-
-### Feeds (brief)
-
-| Method | Returns |
+| Property | Docs |
 | --- | --- |
-| `feeds.create({ connection, remote, name, color?, block? })` | `Promise<Feed>` |
-| `feeds.list()` | `Promise<Feed[]>` |
-| `feeds.retrieve(hex)` | `Promise<Feed>` |
-| `feeds.del(hex)` | `Promise<void>` |
+| `contacts` | [Contacts](services/contacts.md) |
+| `mail` | [Mail](services/mail.md) |
+| `keys` | [Authentication & keys](services/auth.md) |
+| `user` | [User](services/user.md) |
+| `tenant` | [Tenant](services/tenant.md) |
+| `calendar` | [Calendar](services/calendar.md) |
+| `events` | [Events](services/events.md) |
+| `feeds` | [Feeds](services/feeds.md) |
+| `scheduling` | [Scheduling](services/scheduling.md) |
 
-`Feed`: `hex`, `tenant?`, `user?`, `connection`, `remote`, `name`, `color?`, `block`, `active`, `last?`.
+## Common envelopes
 
-## Common return envelopes
+**Page:** `{ items, total, next? }` or `{ items, total, page?, pages? }` — `crates/core/src/page.rs`.
 
-**Page:** `{ items: T[]; total: number; next?: string; page?: number; pages?: number }`
+**Empty ack:** many PATCH/DELETE handlers return JSON `null` (`Json(())`), not `{ ok: true }`.
 
-**Ack:** `{ ok: boolean }`
+**Errors:**
 
-**Create hex:** `{ hex: string }` (calendars, domains, webhooks, …)
-
-## Errors
-
-Failed responses throw `HermesError`:
-
-| Property | Type |
-| --- | --- |
-| `status` | `number` — HTTP status (`0` = client/network) |
-| `code` | `string` — API or synthetic code |
-| `message` | `string` |
-| `field` | `string?` |
-| `requestId` | `string?` |
-| `body` | `unknown?` |
-
-```ts
-try {
-  await hermes.contacts.list();
-} catch (e) {
-  if (e instanceof HermesError) console.error(e.status, e.code, e.message);
-}
+```json
+{ "error": "forbidden", "message": "…" }
 ```
+
+See [Types](../types/index.md).
 
 ## See also
 
-- [Contacts](services/contacts.md) · [Mail](services/mail.md) · [User](services/user.md) · [Tenant](services/tenant.md)
-- [Authentication & keys](services/auth.md)
-- Package README: [`packages/sdk/README.md`](../../packages/sdk/README.md)
+Package README: [`packages/sdk/README.md`](../../packages/sdk/README.md)

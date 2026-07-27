@@ -1,3 +1,3 @@
 # Types & enums
 
-See [types/index.md](types/index.md).
+Canonical wire shapes (from the API crate): [types/index.md](types/index.md).

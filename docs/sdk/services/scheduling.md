@@ -1,177 +1,152 @@
 # Scheduling (`hermes.scheduling`)
 
-Booking services, appointments, availability windows, and public book links.
+Booking services, appointments, windows, overrides, availability, and public book links.
+
+**Sources:** `crates/api/src/handlers/tenant/user/{services,appointments,windows,overrides,availability}/*`, `crates/api/src/handlers/tenant/booking/*`, `crates/api/src/data/tenant/user/appointments.rs`, `crates/db/src/models/scheduling/*`, `crates/tenant/src/user/availability.rs`.
 
 ```ts
 const services = await hermes.scheduling.services();
-const slots = await hermes.scheduling.availability(
-  '2026-08-01T00:00:00Z',
-  '2026-08-07T00:00:00Z'
+const avail = await hermes.scheduling.availability(
+  '2026-08-01T00:00:00',
+  '2026-08-07T00:00:00'
 );
-const appts = await hermes.scheduling.appointments({ limit: 20 });
+// avail.slots + avail.busy
 ```
 
 ## Public booking
 
-| Method | Signature | HTTP | Returns |
+| SDK | HTTP | Returns |
+| --- | --- | --- |
+| `view(slug)` | `GET /book/{slug}` | `Service` |
+| `book(slug, data)` | `POST /book/{slug}` | `{ appointment, guest }` |
+| `guest(token)` | `GET /book/guest/{token}` | `{ guest, appointment }` |
+| `cancelGuest(token)` | `POST /book/guest/{token}/cancel` | `{ status: "canceled" }` |
+
+### Book body
+
+| Field | Type | Required | Format |
 | --- | --- | --- | --- |
-| `view` | `(slug) => Promise<Service>` | `GET /book/{slug}` | Service |
-| `book` | `(slug, data) => Promise<{ appt; guest }>` | `POST /book/{slug}` | Appointment + guest |
-| `guest` | `(token) => Promise<{ appt; guest }>` | `GET /book/guest/{token}` | Appointment + guest |
-| `cancelGuest` | `(token) => Promise<{ status: string }>` | `POST /book/guest/{token}/cancel` | Status |
-
-### `book` body
-
-| Field | Type | Required |
-| --- | --- | --- |
-| `name` | `string` | yes |
-| `email` | `string` | yes |
-| `start` | `string` | yes |
-| `end` | `string` | yes |
-
-## Appointments
-
-| Method | Signature | Returns |
-| --- | --- | --- |
-| `createAppointment` | `(data) => Promise<Appointment>` | Appointment |
-| `appointments` | `(query?) => Promise<Page<Appointment>>` | Page |
-| `retrieveAppointment` | `(hex) => Promise<Appointment>` | Appointment |
-| `cancelAppointment` | `(hex) => Promise<{ ok: boolean }>` | Ack |
-| `deleteAppointment` | `(hex) => Promise<{ ok: boolean }>` | Ack |
-
-### `createAppointment` body
-
-| Field | Type | Required |
-| --- | --- | --- |
-| `service` | `string` | yes |
-| `start` | `string` | yes |
-| `end` | `string` | yes |
-| `timezone` | `string` | no |
-| `uid` | `string` | no |
-| `method` | `string` | no |
-| `event` | `string` | no |
-| `location` | `string` | no |
-| `notes` | `string` | no |
-| `rescheduled` | `string` | no |
-| `meta` | `object` | no |
-
-## Services & availability
-
-| Method | Signature | Returns |
-| --- | --- | --- |
-| `createService` | `(data) => Promise<Service>` | Service |
-| `services` | `() => Promise<Service[]>` | Array (not paged) |
-| `retrieveService` | `(hex) => Promise<Service>` | Service |
-| `deleteService` | `(hex) => Promise<void>` | Empty |
-| `windows` | `() => Promise<Window[]>` | Weekly windows |
-| `overrides` | `() => Promise<Override[]>` | Date overrides |
-| `availability` | `(start, end) => Promise<Availability>` | Slots |
-
-### `createService` body
-
-| Field | Type | Required |
-| --- | --- | --- |
-| `name` | `string` | yes |
-| `slug` | `string` | yes |
-| `duration` | `number` | yes — minutes |
-| `buffer` | `number` | no |
-| `notice` | `number` | no |
-| `horizon` | `number` | no |
-| `increment` | `number` | no |
-| `max` | `number` | no |
-| `location` | `object` | no |
-| `questions` | `string[]` | no |
-| `meta` | `object` | no |
-
-## Return types
-
-### `Service`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `tenant` | `string?` |
-| `user` | `string?` |
-| `name` | `string` |
-| `slug` | `string` |
-| `description` | `string?` |
-| `duration` | `number` |
-| `buffer` | `number?` |
-| `notice` | `number?` |
-| `horizon` | `number?` |
-| `increment` | `number?` |
-| `max` | `number?` |
-| `location` | `object?` |
-| `questions` | `string[]?` |
-| `active` | `boolean?` |
-| `meta` | `object?` |
-| `created` | `string?` |
-| `updated` | `string?` |
-
-### `Appointment`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `tenant` | `string` |
-| `service` | `string` |
-| `host` | `string` |
-| `start` | `string` |
-| `end` | `string` |
-| `timezone` | `string` |
-| `status` | `string` |
-| `uid` | `string` |
-| `sequence` | `number` |
-| `method` | `string` |
-| `event` | `string?` |
-| `location` | `object` |
-| `notes` | `string?` |
-| `cancelled` | `string?` |
-| `rescheduled` | `string?` |
-| `meta` | `object` |
-| `created` | `string` |
-| `updated` | `string` |
-
-### `Guest`
-
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `tenant` | `string` |
-| `appointment` | `string` |
-| `user` | `string?` |
-| `name` | `string` |
-| `email` | `string` |
-| `phone` | `string?` |
-| `status` | `string` |
-| `answers` | `object` |
-| `token` | `string` |
-| `notified` | `string?` |
-| `created` | `string` |
-| `updated` | `string` |
-
-### `Availability`
-
-```ts
-{ slots: Array<{ start: string; end: string }> }
-```
-
-### `Window` / `Override`
-
-| Type | Fields |
-| --- | --- |
-| `Window` | `hex`, `day` (0–6), `start`, `end` |
-| `Override` | `hex`, `date`, `available` |
+| `name` / `email` | string | yes | |
+| `start` / `end` | string | yes | `%Y-%m-%dT%H:%M:%S` |
 
 ### Book response
 
 ```json
 {
-  "appt": { "hex": "A0X…", "status": "confirmed", "start": "…", "end": "…" },
-  "guest": { "hex": "G0X…", "email": "guest@example.com", "token": "…" }
+  "appointment": { /* Appointment model */ },
+  "guest": { /* Guest model */ }
 }
 ```
 
+Key is **`appointment`**, not `appt`.
+
+## Appointments
+
+### Create body (API `Create`)
+
+| Field | Type | Required |
+| --- | --- | --- |
+| `host` | string | **yes** |
+| `service` | string | **yes** |
+| `start` / `end` | string | yes — `%Y-%m-%dT%H:%M:%S` |
+| `timezone` | string | yes |
+| `uid` | string | yes |
+| `method` | string | yes |
+| `event` | string | no |
+| `location` | object | no |
+| `notes` | string | no |
+| `rescheduled` | string | no |
+| `meta` | object | **yes** |
+
+### `Appointment` model
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `service` / `host` | string | no |
+| `start` / `end` | datetime | no |
+| `timezone` / `uid` / `method` | string | no |
+| `status` | `"pending"\|"confirmed"\|"cancelled"\|"completed"\|"noshow"` | no |
+| `sequence` | number | no |
+| `event` | string | yes |
+| `location` | object | yes |
+| `notes` | string | yes |
+| `cancelled` | datetime | yes |
+| `rescheduled` | string | yes |
+| `meta` | object | no |
+| `created` / `updated` | datetime | no |
+
+## Services — `Service` model
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `user` / `name` / `slug` | string | no |
+| `description` | string | yes |
+| `duration` / `buffer` / `notice` / `horizon` / `increment` | number | no |
+| `max` | number | yes |
+| `location` | object | no |
+| `questions` | json (often array) | no |
+| `active` | boolean | no |
+| `meta` | object | no |
+| `created` / `updated` | datetime | no |
+
+Create defaults (handler): duration 30, buffer 0, notice 60, horizon 86400, increment 30.
+
+`services()` returns `Service[]` (not a page).
+
+## Windows — `Window` model (`GET /user/windows` → `Window[]`)
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `user` / `name` / `timezone` | string | no |
+| `priority` | number | no |
+| `start` / `end` | datetime | yes |
+| `busytype` | string | no |
+| `rrule` | string | yes |
+| `slots` | object/array (json) | no |
+| `active` | boolean | no |
+| `meta` | object | no |
+| `created` / `updated` | datetime | no |
+
+This is **not** `{ day, start, end }`.
+
+## Overrides — `Override` model
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `user` | string | no |
+| `window` | string | yes |
+| `start` / `end` | datetime | no |
+| `available` | boolean | no |
+| `reason` | string | yes |
+| `created` | datetime | no |
+
+## Availability
+
+`GET /user/availability/{start}/{end}` — path datetimes `%Y-%m-%dT%H:%M:%S`.
+
+```json
+{
+  "slots": [{ "start": "2026-08-01T10:00:00", "end": "2026-08-01T10:30:00" }],
+  "busy": [{ "start": "…", "end": "…", "title": null }]
+}
+```
+
+## Guest model
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `id` | number | no |
+| `hex` / `tenant` / `appointment` / `name` / `email` / `token` | string | no |
+| `user` / `phone` | string | yes |
+| `status` | `"pending"\|"accepted"\|"declined"\|"tentative"` | no |
+| `answers` | object | no |
+| `notified` | datetime | yes |
+| `created` / `updated` | datetime | no |
+
 ## Errors
 
-Slot taken / outside windows → `400` / `409`. Unknown slug/token → `404`. Throws `HermesError`.
+`{ "error": "…", "message": "…" }` — see [Types](../../types/index.md).

@@ -1,54 +1,35 @@
 # Authentication & API keys
 
-`@hermers/sdk` authenticates with an **API key only**. There is no `auth.login`, password, or JWT refresh surface in the package.
+`@hermers/sdk` uses an **API key only**. No login / password / JWT refresh in the package.
 
-## Constructing the client
+**Sources:** `crates/api/src/handlers/auth/whoami.rs`, `crates/api/src/handlers/tenant/org/keys/*`, `crates/api/src/data/tenant/org/keys.rs`, `crates/db/src/views/api/keys.rs`, `crates/api/src/error.rs`.
 
-```ts
-import Hermes, { HermesError } from '@hermers/sdk';
-
-const hermes = new Hermes('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
-await hermes.ready(); // GET /auth/whoami — caches Identity
-```
-
-Every request sends:
+## Whoami
 
 ```http
+GET /v1/auth/whoami
 Authorization: Key hm_live_…
 ```
 
-Default base URL: `https://hermers.aduki.pro/v1` (`BASE_URL`).
-
-Missing / empty API key throws immediately:
-
 ```ts
-// HermesError { status: 0, code: 'invalid_api_key' }
+const hermes = new Hermes('hm_live_…');
+await hermes.ready();
+// hermes.me === Identity
 ```
 
-## Whoami & identity cache
+### Response (exact handler JSON)
 
-| Method / property | Signature | Returns |
+| Field | Type | Notes |
 | --- | --- | --- |
-| `ready()` | `(): Promise<Identity>` | Awaits whoami; same as `whoami()` |
-| `whoami()` | `(): Promise<Identity>` | Cached after first success |
-| `me` | `Identity \| undefined` | Sync snapshot; `undefined` until ready |
-
-### `Identity` fields
-
-| Field | Type | Description |
-| --- | --- | --- |
-| `hex` | `string?` | Session / JTI (`A0S…`) |
-| `user` | `string` | User hex (`U0X…`) — required |
-| `tenant` | `string` | Tenant hex (`T0X…`) — required |
-| `owner` | `boolean?` | Tenant owner |
-| `scopes` | `string[]?` | Granted scope patterns |
-| `deny` | `string[]?` | Denied scope patterns |
-| `tier` | `string?` | Plan slug (`free`, …) |
-| `email` | `string?` | When present on response |
-| `name` | `string?` | When present on response |
-| `raw` | `unknown?` | Full whoami JSON (may include `ip`, `agent`) |
-
-### Wire response (`GET /auth/whoami`)
+| `hex` | string | JTI |
+| `user` | string | user hex |
+| `tenant` | string | tenant hex |
+| `owner` | boolean | |
+| `scopes` | string[] | `"domain.scope"` flattened |
+| `deny` | string[] | same |
+| `tier` | string | |
+| `ip` | string | always `""` |
+| `agent` | string | always `""` |
 
 ```json
 {
@@ -64,96 +45,59 @@ Missing / empty API key throws immediately:
 }
 ```
 
-If the body lacks `user` or `tenant`, the client throws `HermesError` with `code: 'invalid_identity'`.
+## API keys (`hermes.keys`)
 
-Resource methods never take tenant/user hex — they use this cache.
-
-## Keys (`hermes.keys`)
-
-Maps to `/user/keys` and `/tenant/keys`. Create hashes the secret **client-side**; the server stores only SHA-256 hash + prefix.
-
-### Methods
-
-| Method | Signature | HTTP | Returns |
-| --- | --- | --- | --- |
-| `list` | `(query?: ListQuery) => Promise<Page<ApiKey>>` | `GET /user/keys` | Page of keys for the user |
-| `listTenant` | `(query?: ListQuery) => Promise<Page<ApiKey>>` | `GET /tenant/keys` | Tenant keys (`keys:read`) |
-| `listActive` | `() => Promise<Page<ApiKey>>` | `GET /tenant/keys/active` | Active tenant keys |
-| `retrieve` | `(hex: string) => Promise<ApiKey>` | `GET /tenant/keys/{hex}` | Key metadata (no raw secret) |
-| `create` | `(data) => Promise<{ hex: string; key: string }>` | `POST /tenant/keys` | Id + **raw secret once** |
-| `updateName` | `(hex, name) => Promise<{ ok: boolean }>` | `PATCH …/name` | Ack |
-| `updateScopes` | `(hex, scopes) => Promise<{ ok: boolean }>` | `PATCH …/scopes` | Ack |
-| `del` | `(hex) => Promise<{ ok: boolean }>` | `DELETE /tenant/keys/{hex}` | Ack |
-
-### `create` request
-
-```ts
-{
-  name: string;
-  scopes: string[];
-  key?: string;                      // optional raw key; otherwise generated
-  meta?: Record<string, unknown>;
-  expires?: string;                  // ISO-8601
-}
-```
-
-Body sent to the API (never the raw key):
-
-```json
-{
-  "name": "ci-bot",
-  "hash": "<sha256 hex of raw key>",
-  "prefix": "<first 1–16 chars>",
-  "scopes": ["contacts:read", "mail:read"],
-  "meta": {},
-  "expires": null
-}
-```
-
-### `create` return
-
-```ts
-{ hex: string; key: string }
-```
-
-| Field | Type | Description |
+| SDK | HTTP | Returns |
 | --- | --- | --- |
-| `hex` | `string` | Server-assigned key id |
-| `key` | `string` | Raw `hm_live_…` secret — show once; store in a secret manager |
+| `list` | `GET /user/keys` | `Page<Keys>` |
+| `listTenant` | `GET /tenant/keys` | `Page<Keys>` |
+| `listActive` | `GET /tenant/keys/active` | `Page<Keys>` |
+| `retrieve` | `GET /tenant/keys/{hex}` | key detail / model |
+| `create` | `POST /tenant/keys` | SDK: `{ hex, key }`; HTTP body: `{ hex }` |
+| `updateName` / `updateScopes` | `PATCH …` | ack / null |
+| `del` | `DELETE /tenant/keys/{hex}` | null |
 
-Helpers: `generateKey()`, `hashKey()`, `prefixKey()` from `@hermers/sdk`.
+### Create — HTTP body (what the server accepts)
 
-### `ApiKey` (list / retrieve)
+| Field | Type | Required |
+| --- | --- | --- |
+| `name` | string | yes |
+| `hash` | string | yes — SHA-256 of raw key |
+| `prefix` | string | yes — ≤16 chars |
+| `scopes` | (string\|null)[] | no |
+| `meta` | object | no |
+| `expires` | datetime string | no |
 
-| Field | Type |
-| --- | --- |
-| `hex` | `string` |
-| `name` | `string` |
-| `prefix` | `string?` |
-| `scopes` | `string[]` |
-| `active` | `boolean?` |
-| `expires` | `string?` |
-| `last` | `string?` |
-| `created` | `string` |
-| `tenant` | `object?` |
-| `user` | `object?` |
+The SDK generates a raw `hm_live_…` key, sends hash+prefix, and returns `{ hex, key }` once.
 
-```ts
-const { hex, key } = await hermes.keys.create({
-  name: 'ci-bot',
-  scopes: ['contacts:read', 'mail:read'],
-});
-// store `key` securely; never log in production
-```
+### List item (`Keys`)
+
+| Field | Type | Nullable |
+| --- | --- | --- |
+| `hex` / `name` / `prefix` | string | no |
+| `active` | boolean | no |
+| `expires` / `last` | datetime | yes |
+| `created` | datetime | no |
+| `tenant` | `{ hex, name }` | no |
+| `user` | `{ hex, name, email }` \| null | yes |
+| `total` | number | no |
+
+Detail adds `scopes` (jsonb array/object as stored).
 
 ## Errors
 
-| Situation | `HermesError` |
-| --- | --- |
-| Empty API key | `status: 0`, `code: 'invalid_api_key'` |
-| Bad / revoked key | HTTP `401` / `403`, `code` from body |
-| Whoami missing ids | `status: 0`, `code: 'invalid_identity'` |
-| Network failure | `status: 0`, `code: 'network_error'` |
-| Validation | HTTP `4xx` with optional `field` |
+```json
+{ "error": "unauthorized", "message": "unauthorized" }
+```
 
-See [Types & enums](../../types/index.md) for the full error shape.
+| `error` code | HTTP |
+| --- | --- |
+| `unauthorized` | 401 |
+| `forbidden` | 403 |
+| `validation` | 422 |
+| `not_found` | 404 |
+| `over_limit` | 429 |
+| `conflict` | 409 |
+| `database` / `storage` / `kafka` / `internal` | 500 |
+
+Flat object — not `{ error: { code, message } }`.

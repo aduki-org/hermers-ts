@@ -87,6 +87,8 @@ class HermesGrpcError extends Error {
 }
 ```
 
+Message field tables on each service page match generated types under `packages/grpc/src/generated/` (from `proto/*.proto`). REST JSON shapes differ — see [Types](../types/index.md).
+
 ## Regenerating stubs
 
 From `sdks/ts` (requires monorepo `proto/` and `protoc`):
