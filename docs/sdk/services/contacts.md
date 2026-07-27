@@ -28,5 +28,3 @@ const created = await hermes.contacts.create({
 });
 const page = await hermes.contacts.list({ limit: 50 });
 ```
-
-API reference: [guide/http/user/contacts.md](../../../guide/http/user/contacts.md).

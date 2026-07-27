@@ -1,0 +1,33 @@
+# Hermers developer docs (mdBook).
+#
+# Book root: sdks/ts/ (this directory) — same place as the npm workspace and
+# GitHub Pages workflow. Source chapters live under book/ (assembled from
+# docs/ and package READMEs by scripts/prepare-book.mjs). HTML output goes to
+# site/ for GitHub Pages.
+#
+# guide/ is a monorepo sdk/ protocol mirror for the server team — not part of
+# this developer book.
+#
+# Build:  npm run docs:build   (or: npm run docs:prepare && mdbook build)
+# Serve:  npm run docs:serve   (or: mdbook serve --open)
+
+[book]
+title = "Hermers"
+description = "TypeScript SDK developer documentation for Hermes (REST + gRPC)"
+authors = ["Aduki"]
+language = "en"
+src = "book"
+
+[build]
+build-dir = "site"
+create-missing = false
+
+[output.html]
+default-theme = "light"
+preferred-dark-theme = "navy"
+git-repository-url = "https://github.com/aduki-org/hermers-ts"
+site-url = "/"
+no-section-label = false
+
+[output.html.search]
+enable = true

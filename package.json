@@ -10,7 +10,9 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "test:unit": "npm run test:unit --workspaces --if-present",
-    "docs:build": "node scripts/build-docs.mjs",
+    "docs:prepare": "node scripts/prepare-book.mjs",
+    "docs:build": "npm run docs:prepare && mdbook build",
+    "docs:serve": "npm run docs:prepare && mdbook serve --open",
     "docs:check": "node scripts/check-docs.mjs",
     "docs": "npm run docs:build && npm run docs:check"
   },

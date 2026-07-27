@@ -76,4 +76,3 @@ Failed responses throw `HermesError` with `status`, `code`, `message`, and optio
 - [Contacts](services/contacts.md) · [Mail](services/mail.md) · [User](services/user.md) · [Tenant](services/tenant.md)
 - [Authentication & keys](services/auth.md)
 - Package README: [`packages/sdk/README.md`](../../packages/sdk/README.md)
-- HTTP API reference: [`guide/http/`](../../guide/http/)

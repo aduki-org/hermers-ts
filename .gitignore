@@ -8,6 +8,13 @@ build/
 site/
 *.tsbuildinfo
 
+# mdBook assembled chapters (copied from docs/ + guide/ by docs:prepare).
+# Keep hand-authored book pages tracked.
+book/**
+!book/SUMMARY.md
+!book/whoami.md
+!book/getting-started.md
+
 # Logs & temp
 *.log
 npm-debug.log*

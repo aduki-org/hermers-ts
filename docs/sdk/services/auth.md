@@ -36,5 +36,3 @@ const id = await hermes.whoami();
 // id.user, id.tenant, id.owner, id.scopes, id.tier
 hermes.me; // same cache
 ```
-
-HTTP shape: see [guide/http/auth.md](../../guide/http/auth.md) (`GET /auth/whoami`).

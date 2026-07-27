@@ -21,5 +21,3 @@ Authenticated user profile under `/user`.
 const profile = await hermes.user.retrieve();
 await hermes.user.updateInfo({ name: 'Ada' });
 ```
-
-API reference: [guide/http/user/index.md](../../../guide/http/user/index.md).

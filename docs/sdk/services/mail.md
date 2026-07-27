@@ -17,5 +17,3 @@ Messages and mailboxes under `/user/mail` and `/user/mailbox`.
 const page = await hermes.mail.inbox({ limit: 50 });
 const boxes = await hermes.mail.listMailboxes();
 ```
-
-API reference: [guide/http/user/mail.md](../../../guide/http/user/mail.md), [mailbox.md](../../../guide/http/user/mailbox.md).

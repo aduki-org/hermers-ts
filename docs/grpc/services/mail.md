@@ -16,5 +16,3 @@ Wraps `hermes.mail.MailService`. Tenant/owner are injected from whoami where req
 ```ts
 const boxes = await client.mail.listMailboxes();
 ```
-
-API reference: [guide/grpc/mail.md](../../../guide/grpc/mail.md).

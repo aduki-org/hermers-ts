@@ -71,7 +71,9 @@ Without `HERMERS_API_KEY`, unit/mocks still run.
 
 ## Documentation
 
-### Consumer guides (this site)
+Developer docs for SDK consumers live in this folder (`docs/`) and are what the published mdBook serves.
+
+### This site
 
 - [REST client (`@hermers/sdk`)](sdk/index.md)
 - [gRPC client (`@hermers/grpc`)](grpc/index.md)
@@ -89,10 +91,6 @@ Without `HERMERS_API_KEY`, unit/mocks still run.
 - [Session](grpc/services/session.md) · [Contact](grpc/services/contact.md) · [Mail](grpc/services/mail.md) · [Feed](grpc/services/feed.md)
 - [Storage](grpc/services/storage.md) · [Sync](grpc/services/sync.md) · [Security](grpc/services/security.md) · [Spam](grpc/services/spam.md)
 - [Tier](grpc/services/tier.md) · [Usage](grpc/services/usage.md)
-
-### API reference (endpoint / proto shapes)
-
-Language-agnostic HTTP and gRPC method docs: [guide/](../guide/) (mirrors monorepo `sdk/`).
 
 ### Package READMEs
 

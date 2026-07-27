@@ -49,9 +49,19 @@ export HERMERS_API_KEY=hm_live_…   # never commit this
 npm test
 ```
 
-Language-agnostic API reference lives in this repo under [`guide/`](./guide/) (HTTP + gRPC)
-and in the Hermes monorepo `sdk/` folder. Consumer guides: [`docs/README.md`](./docs/README.md).
+**Developer documentation** for SDK consumers: [`docs/`](./docs/) (plus package READMEs). That is what mdBook publishes.
+
+[`guide/`](./guide/) mirrors the Hermes monorepo `sdk/` protocol reference for the server team — it is **not** SDK developer docs and is not included in the published book.
+
+Documentation is published with **[mdBook](https://rust-lang.github.io/mdBook/)** (Rust-book UI).
+Book root is this package (`book.toml` + `book/`); chapters are assembled from `docs/` and
+package READMEs into `book/`, then built to `site/` for GitHub Pages.
+
+Requires [`mdbook`](https://github.com/rust-lang/mdBook) on `PATH` (e.g. `cargo install mdbook`).
 
 ```bash
-npm run docs        # build site/ + check links
+npm run docs:prepare   # sync docs/ + package READMEs → book/
+npm run docs:build     # prepare + mdbook build → site/
+npm run docs:serve     # prepare + mdbook serve (http://localhost:3000)
+npm run docs           # build + link/forbidden-string check
 ```

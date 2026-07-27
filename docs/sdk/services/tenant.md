@@ -19,5 +19,3 @@ const members = await hermes.tenant.members();
 ```
 
 For key creation see [Authentication & keys](auth.md).
-
-API reference: [guide/http/tenant.md](../../../guide/http/tenant.md).

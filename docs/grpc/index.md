@@ -73,4 +73,3 @@ npm run generate
 
 - [Session](services/session.md) · [Contact](services/contact.md) · [Mail](services/mail.md)
 - Package README: [`packages/grpc/README.md`](../../packages/grpc/README.md)
-- gRPC API reference: [`guide/grpc/`](../../guide/grpc/)

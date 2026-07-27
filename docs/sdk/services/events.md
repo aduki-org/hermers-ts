@@ -6,5 +6,3 @@ Calendar events under `/user/events`.
 const page = await hermes.events.list();
 await hermes.events.create({ /* … */ });
 ```
-
-API reference: [guide/http/user/events.md](../../../guide/http/user/events.md).

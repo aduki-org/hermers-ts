@@ -1,5 +1,10 @@
 name: Deploy Documentation to GitHub Pages
 
+# Publishes Hermers developer docs from this repo (aduki-org/hermers-ts) via mdBook.
+# Book root: book.toml + book/ (chapters assembled from docs/ + package READMEs).
+# guide/ is not part of the developer book.
+# HTML output: site/ → GitHub Pages.
+
 on:
   push:
     branches:
@@ -7,10 +12,14 @@ on:
       - master
     paths:
       - 'docs/**'
-      - 'guide/**'
+      - 'book/**'
+      - 'book.toml'
       - 'packages/**/README.md'
       - 'README.md'
-      - 'scripts/build-docs.mjs'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'scripts/prepare-book.mjs'
+      - 'scripts/check-docs.mjs'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
@@ -33,6 +42,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v2
+        with:
+          mdbook-version: '0.5.4'
+
+      - name: Verify mdBook
+        run: mdbook --version
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -42,7 +59,8 @@ jobs:
       - name: Install dependencies
         run: npm ci || npm install
 
-      - name: Build documentation site
+      # prepare-book.mjs syncs docs/ + package READMEs into book/, then mdbook → site/
+      - name: Build documentation (mdBook)
         run: npm run docs:build
 
       - name: Check relative doc links

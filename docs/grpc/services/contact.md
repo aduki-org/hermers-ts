@@ -22,5 +22,3 @@ await client.ready();
 const { items } = await client.contacts.list({ limit: 50 });
 await client.contacts.create({ vcard: 'BEGIN:VCARD\nVERSION:3.0\nFN:Ada\nEND:VCARD' });
 ```
-
-API reference: [guide/grpc/contact.md](../../../guide/grpc/contact.md).

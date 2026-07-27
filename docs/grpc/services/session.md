@@ -22,5 +22,3 @@ await client.ready();
 const sessions = await client.session.list({ limit: 20 });
 client.close();
 ```
-
-API reference: [guide/grpc/session.md](../../../guide/grpc/session.md).

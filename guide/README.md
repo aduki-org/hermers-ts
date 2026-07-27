@@ -1,24 +1,8 @@
-# Hermes API guide (mirror)
+# Hermes protocol reference (mirror)
 
-Language-agnostic HTTP and gRPC reference shipped with the TypeScript SDK repo.
-Canonical copy in the Hermes monorepo: `sdk/`.
+This tree mirrors the Hermes monorepo [`sdk/`](../../../sdk/) folder: language-agnostic HTTP and gRPC endpoint/proto notes for the **server / protocol team**.
 
-## TypeScript clients
-
-| Package | Default endpoint |
-| --- | --- |
-| [`@hermers/sdk`](../packages/sdk) | `https://hermers.aduki.pro/v1` |
-| [`@hermers/grpc`](../packages/grpc) | `grpc.aduki.pro:443` |
-
-Auth is **API key only** in the SDKs (`Authorization: Key …`). Whoami on construct; callers never pass tenant/user hex.
-
-```ts
-import Hermes from '@hermers/sdk';
-const hermes = new Hermes('hm_live_…');
-await hermes.ready();
-```
-
-Consumer guides: [docs/README.md](../docs/README.md). Package READMEs: [`@hermers/sdk`](../packages/sdk/README.md), [`@hermers/grpc`](../packages/grpc/README.md).
+It is **not** TypeScript SDK developer documentation. SDK consumers should use [`docs/`](../docs/) (and the published mdBook assembled from that folder).
 
 ## Layout
 
@@ -29,21 +13,4 @@ Consumer guides: [docs/README.md](../docs/README.md). Package READMEs: [`@hermer
 | [`grpc/`](grpc/) | gRPC services (`hermes.*`) |
 | [`whoami/`](whoami/) | Example whoami JSON fixtures |
 
-## Auth
-
-SDK clients:
-
-```http
-Authorization: Key hm_live_…
-```
-
-Browser/admin sessions may use `Bearer` JWTs from `POST /auth/login` — **not** wrapped by `@hermers/*`.
-
-Keys: `POST /tenant/keys` with client-side SHA-256 `hash` + `prefix`. See [`http/keys.md`](http/keys.md).
-
-## Conventions
-
-- Pagination: `Page<T>` (`items`, `total`, `next?`, `page?`, `pages?`)
-- Dates: UTC ISO-8601
-- IDs: opaque hex strings
-- Errors: `{ error: { code, message, field?, request_id } }`
+Canonical source of truth: Hermes monorepo `sdk/`. Keep this mirror in sync when protocol docs change; do not treat it as the SDK getting-started path.
