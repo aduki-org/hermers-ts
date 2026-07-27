@@ -2,8 +2,6 @@
 
 Messages and mailboxes under `/user/mail` and `/user/mailbox`.
 
-**Sources:** `crates/api/src/handlers/tenant/user/mail/*`, `mailbox/*`, `crates/api/src/data/tenant/user/mailbox.rs`, `crates/db/src/views/mail/{messages,mailboxes,threads}.rs`, `crates/db/src/models/mail/mailboxes.rs`.
-
 ```ts
 const page = await hermes.mail.inbox({ limit: 50 });
 // page.items[0].internaldate — not `.date`
@@ -12,7 +10,7 @@ const boxes = await hermes.mail.listMailboxes();
 
 ## Message list endpoints
 
-All return `Page<Messages>` (`db::views::mail::messages::Messages`).
+All return `Page<Messages>`.
 
 | SDK | HTTP |
 | --- | --- |

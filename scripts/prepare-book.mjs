@@ -6,8 +6,8 @@
  * Canonical developer markdown lives in docs/; this script copies it into book/
  * so mdbook has a single src tree.
  *
- * `guide/` is a mirror of the Hermes monorepo `sdk/` protocol reference for the
- * server team — it is not developer documentation and is not copied into the book.
+ * `guide/` is internal protocol scratch — not developer documentation and not
+ * copied into the book.
  *
  * Run from sdks/ts: `npm run docs:prepare` (also invoked by docs:build / docs:serve).
  */

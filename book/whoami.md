@@ -2,8 +2,8 @@
 
 Both SDKs resolve identity with **whoami** on construct and cache it. Prefer `await client.ready()` before the first resource call. Resource methods never take tenant/user hex.
 
-**REST source:** `crates/api/src/handlers/auth/whoami.rs`.  
-**gRPC source:** `SessionService.Whoami` → proto `Session` (`proto/session.proto` / generated types).
+**REST:** `GET /auth/whoami`  
+**gRPC:** `SessionService.Whoami` → `Session` message
 
 ## Identity fields (REST wire + SDK cache)
 
@@ -16,8 +16,8 @@ Both SDKs resolve identity with **whoami** on construct and cache it. Prefer `aw
 | `scopes` | string[] | yes | Flattened `"domain.scope"` patterns |
 | `deny` | string[] | yes | Deny patterns |
 | `tier` | string | yes | Plan slug (e.g. `free`) |
-| `ip` | string | yes | Always `""` in current handler |
-| `agent` | string | yes | Always `""` in current handler |
+| `ip` | string | yes | Always `""` today |
+| `agent` | string | yes | Always `""` today |
 
 SDK `Identity` may also keep `raw` (full payload) and optional `email` / `name` if present on other transports.
 

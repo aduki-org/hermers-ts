@@ -2,8 +2,6 @@
 
 Calendar events under `/user/events`.
 
-**Sources:** `crates/api/src/handlers/tenant/user/events/*`, `crates/db/src/views/dav/events.rs`.
-
 ```ts
 const page = await hermes.events.list({ limit: 50 });
 const created = await hermes.events.create({

@@ -1,6 +1,6 @@
 # Hermers TypeScript SDKs
 
-Official Node.js / TypeScript clients for Hermes (**`@hermers/*`**).
+Open-source Node.js / TypeScript clients for Hermers (**`@hermers/*`**). The Hermers **server is private / proprietary** — these packages and docs describe the public client APIs only.
 
 | Package | Transport | Default endpoint |
 | --- | --- | --- |

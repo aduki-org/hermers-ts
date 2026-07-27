@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.0.0] - 2026-07-28
+
+### Breaking
+
+- **REST:** Removed `contacts.retrieve` and `mail.retrieve` — those HTTP routes do not exist; use list/search (or gRPC `retrieve` / `Get` where available).
+
+### Changed
+
+- **Types:** Corrected wire-shape documentation and TypeScript types to match live REST/gRPC responses.
+- **Docs:** Scrubbed private server path citations from consumer docs; clarified that `@hermers/sdk` / `@hermers/grpc` are open source while the Hermers server is private / proprietary.
+- Package versions bumped to `3.0.0`.
+
+---
+
 ## [2.1.0] - 2026-07-27
 
 ### Added
@@ -24,8 +38,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Docs**: Rewrote consumer guides (`docs/`), API mirror (`guide/`), and package READMEs for API-key-only auth, whoami/`ready`/`me`, production hosts `https://hermers.aduki.pro/v1` and `grpc.aduki.pro:443`, and `HERMERS_API_KEY` live tests.
-- **Docs workflow**: GitHub Pages now builds `site/` via `npm run docs` (includes `guide/` + package READMEs), runs `docs:check` for relative links, and unit tests only (live suites skip without a key).
+- **Docs**: Rewrote consumer guides (`docs/`) and package READMEs for API-key-only auth, whoami/`ready`/`me`, production hosts `https://hermers.aduki.pro/v1` and `grpc.aduki.pro:443`, and `HERMERS_API_KEY` live tests.
+- **Docs workflow**: GitHub Pages now builds `site/` via `npm run docs` (includes package READMEs), runs `docs:check` for relative links, and unit tests only (live suites skip without a key).
 
 ### Removed (docs)
 

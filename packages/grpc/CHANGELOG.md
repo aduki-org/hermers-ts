@@ -1,5 +1,11 @@
 # Changelog
 
+## 3.0.0
+
+- Kept in sync with `@hermers/sdk` **3.0.0** (REST retrieve removals are REST-only; this package still exposes gRPC get-by-hex where the service defines it)
+- Type / docs corrections for live wire shapes
+- Docs: open-source SDK vs private server; scrubbed private source path citations
+
 ## 2.1.0
 
 - Eager `SessionService.Whoami` on construct with identity cache (`ready()` / `whoami()` / `me`)
@@ -13,6 +19,6 @@ Breaking redesign (Stripe/Square-style):
 
 - Root client: `new HermesGrpc('hm_live_…')` with resource namespaces (`contacts`, `mail`, `storage`, …)
 - Native `@grpc/grpc-js` over TLS to `grpc.aduki.pro:443` (replaces fake grpc-web JSON fetch)
-- Types/stubs generated from `proto/*.proto` via `ts-proto` (`npm run generate`)
+- Types/stubs generated from proto definitions via `ts-proto` (`npm run generate`)
 - API-key metadata only — session login/password/refresh RPCs not exposed
 - Typed `HermesGrpcError`

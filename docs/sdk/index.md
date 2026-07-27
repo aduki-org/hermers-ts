@@ -2,7 +2,7 @@
 
 Stripe/Square-style root client. Pass an API key; call resource methods. Tenant and user come from whoami — never pass hex IDs.
 
-Wire JSON shapes in these docs are taken from `crates/api` handlers and `crates/db` Serialize views/models — not from guessed SDK TypeScript types.
+Field tables and JSON examples describe the **HTTP wire shapes** the API returns.
 
 ## Install
 
@@ -49,9 +49,9 @@ Whoami fields: `hex`, `user`, `tenant`, `owner`, `scopes`, `deny`, `tier`, `ip`,
 
 ## Common envelopes
 
-**Page:** `{ items, total, next? }` or `{ items, total, page?, pages? }` — `crates/core/src/page.rs`.
+**Page:** `{ items, total, next? }` or `{ items, total, page?, pages? }`.
 
-**Empty ack:** many PATCH/DELETE handlers return JSON `null` (`Json(())`), not `{ ok: true }`.
+**Empty ack:** many PATCH/DELETE endpoints return JSON `null`, not `{ ok: true }`.
 
 **Errors:**
 

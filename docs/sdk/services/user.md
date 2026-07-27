@@ -2,8 +2,6 @@
 
 Authenticated user under `/user`.
 
-**Sources:** `crates/api/src/handlers/tenant/user/{view,edit,preferences,sessions,audits}.rs`, `crates/db/src/models/platform/{users,preferences}.rs`, `crates/db/src/views/platform/users.rs`, `crates/db/src/views/auth/{sessions,audits}.rs`.
-
 ```ts
 const user = await hermes.user.retrieve(); // full User model from GET /user
 await hermes.user.updateInfo({ name: 'Ada', bio: '' }); // API requires both name + bio

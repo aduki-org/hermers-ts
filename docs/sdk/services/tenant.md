@@ -2,8 +2,6 @@
 
 Tenant administration under `/tenant/*`. API keys: [`hermes.keys`](auth.md).
 
-**Sources:** `crates/api/src/handlers/tenant/org/*`, `crates/db/src/views/platform/{tenants,users,invitations}.rs`, `crates/db/src/views/{billing,spam,api}/*`, `crates/api/src/handlers/tenant/org/security/status.rs`.
-
 ```ts
 const tenant = await hermes.tenant.retrieve();
 const members = await hermes.tenant.members({ limit: 50 });

@@ -2,8 +2,6 @@
 
 Booking services, appointments, windows, overrides, availability, and public book links.
 
-**Sources:** `crates/api/src/handlers/tenant/user/{services,appointments,windows,overrides,availability}/*`, `crates/api/src/handlers/tenant/booking/*`, `crates/api/src/data/tenant/user/appointments.rs`, `crates/db/src/models/scheduling/*`, `crates/tenant/src/user/availability.rs`.
-
 ```ts
 const services = await hermes.scheduling.services();
 const avail = await hermes.scheduling.availability(

@@ -1,5 +1,16 @@
 # Changelog
 
+## 3.0.0
+
+**BREAKING**
+
+- Removed `contacts.retrieve` and `mail.retrieve` (no matching REST routes). Use list/search, or `@hermers/grpc` get-by-hex where available.
+
+Also:
+
+- Type corrections for live wire shapes
+- Docs: open-source SDK vs private server; scrubbed private source path citations
+
 ## 2.1.0
 
 - Eager `GET /auth/whoami` on construct with identity cache (`ready()` / `whoami()` / `me`)

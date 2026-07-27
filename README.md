@@ -1,11 +1,13 @@
 # Hermers TypeScript SDKs
 
-Official Node.js / TypeScript clients for Hermes (**packaged as `@hermers/*`**).
+Open-source Node.js / TypeScript clients for **Hermers** (**`@hermers/*`**).
 
 | Package | Path | Transport | Default endpoint |
 | --- | --- | --- | --- |
 | [`@hermers/sdk`](./packages/sdk) | `packages/sdk` | REST / JSON | `https://hermers.aduki.pro/v1` |
 | [`@hermers/grpc`](./packages/grpc) | `packages/grpc` | Native gRPC (TLS) | `grpc.aduki.pro:443` |
+
+The Hermers / Hermes **server is private / proprietary**. These packages are the public TypeScript SDKs — they are **not** a source drop of the server, and developer docs here do not cite or depend on private server source trees.
 
 ## Install
 
@@ -20,6 +22,7 @@ npm install @hermers/grpc
 import Hermes from '@hermers/sdk';
 
 const hermes = new Hermes('hm_live_…');
+await hermes.ready(); // whoami — caches user + tenant
 const contacts = await hermes.contacts.list();
 ```
 
@@ -27,17 +30,18 @@ const contacts = await hermes.contacts.list();
 import { HermesGrpc } from '@hermers/grpc';
 
 const client = new HermesGrpc('hm_live_…');
+await client.ready();
 const { items } = await client.contacts.list();
 client.close();
 ```
 
-Auth is **API key only** (`Authorization: Key …` / gRPC metadata). No login or password flows.
+Auth is **API key only** (`Authorization: Key …` / gRPC metadata). No login or password flows. Defaults are the production hosts above; override only for local/dev.
 
 ## Develop
 
 ```bash
 npm install
-npm run generate   # regenerate gRPC stubs from ../../proto
+npm run generate   # regenerate gRPC stubs from proto definitions
 npm run build
 npm test           # unit + live (live skips unless HERMERS_API_KEY is set)
 ```
@@ -50,8 +54,6 @@ npm test
 ```
 
 **Developer documentation** for SDK consumers: [`docs/`](./docs/) (plus package READMEs). That is what mdBook publishes.
-
-[`guide/`](./guide/) mirrors the Hermes monorepo `sdk/` protocol reference for the server team — it is **not** SDK developer docs and is not included in the published book.
 
 Documentation is published with **[mdBook](https://rust-lang.github.io/mdBook/)** (Rust-book UI).
 Book root is this package (`book.toml` + `book/`); chapters are assembled from `docs/` and

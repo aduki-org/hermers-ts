@@ -2,7 +2,7 @@
 
 Wraps `hermes.contact.ContactService`. `tenant` / `owner` on Create, List, and Sync are injected from the whoami cache.
 
-**Unlike REST:** gRPC exposes `retrieve` (`Get`) and create only needs `vcard` (no required `name` / `meta`). The returned `Contact` is the proto message (`tenant`, `owner`, `vcard`, `etag`, `created`/`updated`) — not the REST diesel create model or list row.
+**Unlike REST:** gRPC exposes `retrieve` (`Get`) and create only needs `vcard` (no required `name` / `meta`). The returned `Contact` is the gRPC message (`tenant`, `owner`, `vcard`, `etag`, `created`/`updated`) — not the REST create response or list row.
 
 ```ts
 await client.ready();

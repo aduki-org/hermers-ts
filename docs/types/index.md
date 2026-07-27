@@ -1,12 +1,10 @@
 # Types & enums
 
-Shapes below are taken from Hermes **API / DB Serialize types** (`crates/api`, `crates/db`, `crates/core`). The TypeScript SDK may use looser or renamed fields — prefer these wire shapes when reading responses.
+Canonical **wire JSON** shapes returned by the Hermers API. The TypeScript SDK may use looser or renamed fields — prefer these shapes when reading responses.
 
-Timestamps serialize as naive datetime strings (`"2026-07-28T12:00:00"`). Enums use `#[serde(rename_all = "lowercase")]`.
+Timestamps serialize as naive datetime strings (`"2026-07-28T12:00:00"`). String enums are lowercase (e.g. `"active"`, `"light"`).
 
 ## Identity (whoami)
-
-**Handler:** `crates/api/src/handlers/auth/whoami.rs` (ad-hoc `json!`).
 
 | Field | JSON type | Notes |
 | --- | --- | --- |
@@ -24,8 +22,6 @@ Both SDKs cache this as `Identity` (`user` / `tenant` required). gRPC Whoami ret
 
 ## Page envelope
 
-**Type:** `main::Page<T>` — `crates/core/src/page.rs`
-
 | Field | Type | When present |
 | --- | --- | --- |
 | `items` | `T[]` | always |
@@ -42,11 +38,9 @@ Both SDKs cache this as `Identity` (`user` / `tenant` required). gRPC Whoami ret
 | `page` | number? | if set → page mode |
 | `limit` | number? | default 50, max 200 |
 
-List SQL views often also put `total` on **each row** (window count).
+List responses often also put `total` on **each row** (window count).
 
 ## REST error envelope
-
-**Type:** `crates/api/src/error.rs`
 
 ```json
 { "error": "forbidden", "message": "missing scope contacts:write" }
@@ -57,13 +51,13 @@ List SQL views often also put `total` on **each row** (window count).
 | `error` | string | Code: `not_found`, `unauthorized`, `forbidden`, `conflict`, `over_limit`, `validation`, `database`, `storage`, `kafka`, `internal` |
 | `message` | string | Human-readable detail |
 
-HTTP status: 404 / 401 / 403 / 409 / 429 / 422 / 500. There is **no** nested `{ error: { code, message } }` and no `field` / `request_id` in the API crate today.
+HTTP status: 404 / 401 / 403 / 409 / 429 / 422 / 500. There is **no** nested `{ error: { code, message } }` and no `field` / `request_id` on the wire today.
 
 `@hermers/sdk` throws `HermesError` after parsing this body. `@hermers/grpc` throws `HermesGrpcError` with gRPC status names.
 
 ## Contacts (REST)
 
-### List row — `db::views::dav::contacts::Contacts`
+### List row — `Contacts`
 
 | Field | Type | Nullable |
 | --- | --- | --- |
@@ -76,7 +70,7 @@ HTTP status: 404 / 401 / 403 / 409 / 429 / 422 / 500. There is **no** nested `{ 
 | `created` | datetime | no |
 | `total` | number | no |
 
-### Create response — `db::models::dav::contacts::Contact`
+### Create response — `Contact`
 
 | Field | Type | Nullable |
 | --- | --- | --- |
@@ -94,9 +88,9 @@ HTTP status: 404 / 401 / 403 / 409 / 429 / 422 / 500. There is **no** nested `{ 
 | `deleted` | datetime | yes |
 | `created` / `updated` | datetime | no |
 
-There is **no** `GET /user/contacts/{hex}` route. `ContactDetail` exists in DB views but is unused by HTTP.
+There is **no** `GET /user/contacts/{hex}` route on REST.
 
-Patch / delete handlers return JSON `null` (`Json(())`).
+Patch / delete endpoints return JSON `null`.
 
 ## Mail (REST)
 
@@ -114,9 +108,9 @@ Patch / delete handlers return JSON `null` (`Json(())`).
 | `mailbox` | `{ hex, name }` | no |
 | `total` | number | no |
 
-### Message detail view — `MessageDetail` (DB; no HTTP GET-by-hex today)
+### Message get-by-hex
 
-Adds `structure?`, `modseq`, `created`, `blob: { hex, size, mime }`. List endpoints do not return this shape. Routes expose inbox/sent/… lists, send, flags, and delete — **not** `GET /user/mail/{hex}`.
+REST has **no** `GET /user/mail/{hex}`. List endpoints return the list-row shape above (not a separate detail document). Routes expose inbox/sent/… lists, send, flags, and delete.
 
 ### Thread — `Threads`
 
@@ -137,13 +131,13 @@ Adds `structure?`, `modseq`, `created`, `blob: { hex, size, mime }`. List endpoi
 | `uidvalidity` / `uidnext` / `messages` / `unread` / `total` | number |
 | `created` | datetime |
 
-List rows do **not** include `size` (that is on `MailboxDetail` / create model).
+List rows do **not** include `size` (create responses may).
 
 ## User (REST)
 
-### `GET /user` — full `User` model
+### `GET /user` — full `User` object
 
-Password is skipped by serde.
+Password is never included in the response.
 
 | Field | Type | Nullable |
 | --- | --- | --- |
@@ -236,7 +230,7 @@ Create response: `{ hex, etag, sync_token }`
 
 Create/update response: `{ hex, etag, uid }`
 
-### Feed model (HTTP returns diesel model)
+### Feed model (HTTP create/list response)
 
 `id`, `hex`, `tenant`, `user`, `connection`, `remote`, `name`, `color?`, `block`, `sync?`, `active`, `meta`, `last?`, `created`, `updated`
 
@@ -275,7 +269,7 @@ Not `{ day, start, end }` — full model: `id`, `hex`, `tenant`, `user`, `name`,
 
 (Not `appt`.)
 
-## gRPC enums (from proto / ts-proto)
+## gRPC enums (from generated stubs)
 
 ```ts
 enum Flag { FLAG_SEEN=0, FLAG_ANSWERED=1, FLAG_FLAGGED=2, FLAG_DELETED=3, FLAG_DRAFT=4 } // MailFlag
@@ -291,11 +285,11 @@ Do **not** share one TypeScript interface across transports. Examples:
 
 | Area | REST (`@hermers/sdk`) | gRPC (`@hermers/grpc`) |
 | --- | --- | --- |
-| Contact get-by-hex | **no route** | `Get` → proto `Contact` |
-| Contact create | body needs `name`+`vcard`+`meta`; returns diesel model | body `vcard` only; returns proto `Contact` |
+| Contact get-by-hex | **no route** | `Get` → gRPC `Contact` |
+| Contact create | body needs `name`+`vcard`+`meta`; returns full contact row | body `vcard` only; returns gRPC `Contact` |
 | Message list | `internaldate`, `sender`, `mailbox:{hex,name}` | N/A list shape; GetMessage uses `date`, `from`, `flags:Flag[]` |
 | Message get | **no route** | `GetMessage` exists |
-| Feed | diesel model (`id`, `meta`, `sync`, …) | proto `Feed` (no `id`/`meta`) |
+| Feed | REST row (`id`, `meta`, `sync`, …) | gRPC `Feed` (no `id`/`meta`) |
 | Security status | `policy` / `records` objects | `policyJson` / `recordsJson` strings |
-| Whoami | flat JSON + empty `ip`/`agent` | proto `Session` (+ timestamps) |
+| Whoami | flat JSON + empty `ip`/`agent` | gRPC `Session` (+ timestamps) |
 | Errors | `{ error, message }` JSON | `HermesGrpcError` status codes |

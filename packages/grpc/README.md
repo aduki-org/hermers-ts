@@ -1,6 +1,8 @@
 # `@hermers/grpc`
 
-Official **Hermes gRPC** client for Node.js and TypeScript. Native gRPC over TLS — types and stubs are **generated from** `proto/*.proto` via `ts-proto` + `@grpc/grpc-js`.
+Open-source **Hermers gRPC** client for Node.js and TypeScript. Native gRPC over TLS — types and stubs are generated via `ts-proto` + `@grpc/grpc-js`.
+
+The Hermers **server is private / proprietary**. This package is licensed as open source; it does not include or publish server source.
 
 ## Install
 
@@ -72,7 +74,7 @@ From `sdks/ts`:
 npm run generate
 ```
 
-This runs `protoc` + `ts-proto` against `../../proto/*.proto` into `packages/grpc/src/generated/`.
+This runs `protoc` + `ts-proto` against the checkout’s proto definitions into `packages/grpc/src/generated/`.
 
 ## Live tests
 

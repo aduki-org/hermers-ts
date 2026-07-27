@@ -91,7 +91,7 @@ Message field tables on each service page match generated types under `packages/
 
 ## Regenerating stubs
 
-From `sdks/ts` (requires monorepo `proto/` and `protoc`):
+From `sdks/ts` (requires `protoc` and the bundled/checkout `proto/` definitions):
 
 ```bash
 npm run generate

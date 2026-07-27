@@ -18,6 +18,11 @@ const FORBIDDEN = [
   /hermes\.auth\.login/i,
   /createkey\(/,
   /HERMES_API_KEY/, // must be HERMERS_API_KEY
+  // Private server paths must not appear in published SDK docs
+  /crates\//,
+  /handlers\/[a-z]/,
+  /\.rs[`'\s)]/,
+  /\*\*Sources?:\*\*/i,
 ];
 
 const LINK_RE = /\[[^\]]*\]\(([^)]+)\)/g;

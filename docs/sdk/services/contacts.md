@@ -2,8 +2,6 @@
 
 CardDAV contacts under `/user/contacts`. Tenant/user come from the session — never send them in the body.
 
-**Sources:** `crates/api/src/handlers/tenant/user/contacts/*`, `crates/api/src/data/tenant/user/contacts.rs`, `crates/db/src/models/dav/contacts.rs`, `crates/db/src/views/dav/contacts.rs`.
-
 ```ts
 await hermes.ready();
 const created = await hermes.contacts.create({

@@ -1,6 +1,8 @@
 # `@hermers/sdk`
 
-Official **Hermes REST** client for Node.js and TypeScript. Stripe/Square-style API — pass an API key and call resource methods.
+Open-source **Hermers REST** client for Node.js and TypeScript. Stripe/Square-style API — pass an API key and call resource methods.
+
+The Hermers **server is private / proprietary**. This package is licensed as open source; it does not include or publish server source.
 
 ## Install
 

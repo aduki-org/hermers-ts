@@ -2,8 +2,6 @@
 
 External calendar ICS feeds under `/user/feeds`.
 
-**Sources:** `crates/api/src/handlers/tenant/user/feeds/*`, `crates/db/src/models/scheduling/feeds.rs`.
-
 ```ts
 const feeds = await hermes.feeds.list();
 const feed = await hermes.feeds.create({

@@ -2,8 +2,6 @@
 
 CalDAV calendars under `/user/calendars`.
 
-**Sources:** `crates/api/src/handlers/tenant/user/calendars/*`, `crates/db/src/views/dav/calendars.rs`.
-
 ```ts
 const page = await hermes.calendar.list({ limit: 50 });
 const created = await hermes.calendar.create({

@@ -2,8 +2,6 @@
 
 `@hermers/sdk` uses an **API key only**. No login / password / JWT refresh in the package.
 
-**Sources:** `crates/api/src/handlers/auth/whoami.rs`, `crates/api/src/handlers/tenant/org/keys/*`, `crates/api/src/data/tenant/org/keys.rs`, `crates/db/src/views/api/keys.rs`, `crates/api/src/error.rs`.
-
 ## Whoami
 
 ```http
@@ -17,7 +15,7 @@ await hermes.ready();
 // hermes.me === Identity
 ```
 
-### Response (exact handler JSON)
+### Response
 
 | Field | Type | Notes |
 | --- | --- | --- |
