@@ -9,7 +9,7 @@ npm install @hermers/grpc
 ```
 
 ```ts
-import { HermesGrpc } from '@hermers/grpc';
+import { HermesGrpc, HermesGrpcError, BASE_ENDPOINT } from '@hermers/grpc';
 
 const client = new HermesGrpc('hm_live_xxxxxxxxxxxxxxxxxxxxxxxx');
 await client.ready();
@@ -36,30 +36,56 @@ Always call `client.close()` when finished.
 
 ## Identity
 
-| API | Behavior |
-| --- | --- |
-| `ready()` | Awaits `SessionService.Whoami`, caches identity |
-| `whoami()` | Same (cached after first success) |
-| `me` | Cached `Identity` or `undefined` until ready |
+| API | Signature | Behavior |
+| --- | --- | --- |
+| `ready()` | `(): Promise<Identity>` | Awaits `SessionService.Whoami` |
+| `whoami()` | `(): Promise<Identity>` | Cached after first success |
+| `me` | `Identity \| undefined` | Sync snapshot |
+
+```ts
+interface Identity {
+  hex?: string;
+  user: string;
+  tenant: string;
+  owner?: boolean;
+  scopes?: string[];
+  deny?: string[];
+  tier?: string;
+  raw?: Session; // full proto Session
+}
+```
 
 Resource methods that need tenant/owner call `requireTenant()` / `requireUser()` internally — callers never pass those hex fields.
 
+See [Session](services/session.md) and [Types](../types/index.md).
+
 ## Resources
 
-| Property | Proto service |
-| --- | --- |
-| `contacts` | `hermes.contact.ContactService` |
-| `mail` | `hermes.mail.MailService` |
-| `feeds` | `hermes.feeds.FeedService` |
-| `storage` | `hermes.storage.StorageService` |
-| `sync` | `hermes.sync.SyncService` |
-| `security` | `hermes.security.SecurityService` |
-| `spam` | `hermes.spam.SpamService` |
-| `tier` | `hermes.tier.TierService` |
-| `usage` | `hermes.usage.UsageService` |
-| `session` | `hermes.session.SessionService` — whoami / load / revoke / list only |
+| Property | Proto service | Docs |
+| --- | --- | --- |
+| `contacts` | `hermes.contact.ContactService` | [Contact](services/contact.md) |
+| `mail` | `hermes.mail.MailService` | [Mail](services/mail.md) |
+| `feeds` | `hermes.feeds.FeedService` | [Feed](services/feed.md) |
+| `storage` | `hermes.storage.StorageService` | [Storage](services/storage.md) |
+| `sync` | `hermes.sync.SyncService` | [Sync](services/sync.md) |
+| `security` | `hermes.security.SecurityService` | [Security](services/security.md) |
+| `spam` | `hermes.spam.SpamService` | [Spam](services/spam.md) |
+| `tier` | `hermes.tier.TierService` | [Tier](services/tier.md) |
+| `usage` | `hermes.usage.Usageervice` | [Usage](services/usage.md) |
+| `session` | `hermes.session.SessionService` | [Session](services/session.md) |
 
 Login / Issue / Refresh / Patch RPCs exist on the server but are **not** exposed.
+
+## Errors
+
+```ts
+class HermesGrpcError extends Error {
+  code: string;       // e.g. UNAUTHENTICATED
+  grpcCode?: number;
+  details?: string;
+  metadata?: Metadata;
+}
+```
 
 ## Regenerating stubs
 
