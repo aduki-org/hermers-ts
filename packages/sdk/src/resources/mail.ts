@@ -81,6 +81,20 @@ export class MailResource {
     });
   }
 
+  folderUnread(folder: string, query?: ListQuery): Promise<Page<Message>> {
+    return this.http.get<Page<Message>>(
+      `/user/mail/folder/${encodeURIComponent(folder)}/unread`,
+      { query }
+    );
+  }
+
+  folderFlagged(folder: string, query?: ListQuery): Promise<Page<Message>> {
+    return this.http.get<Page<Message>>(
+      `/user/mail/folder/${encodeURIComponent(folder)}/flagged`,
+      { query }
+    );
+  }
+
   search(q: string): Promise<Page<Message>> {
     return this.http.get<Page<Message>>(`/user/mail/search/${encodeURIComponent(q)}`);
   }
@@ -144,6 +158,43 @@ export class MailResource {
 
   renameMailbox(hex: string, name: string): Promise<MailboxModel> {
     return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/name`, { name });
+  }
+
+  /** Mailboxes filtered by hex (server returns mailbox rows). */
+  mailboxMessages(mailbox: string, query?: ListQuery): Promise<Page<Mailbox>> {
+    return this.http.get<Page<Mailbox>>(`/user/mailbox/messages/${mailbox}`, { query });
+  }
+
+  updateMailboxRole(hex: string, role: string): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/role`, { role });
+  }
+
+  updateMailboxUidnext(hex: string, uidnext: number): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/uidnext`, { uidnext });
+  }
+
+  updateMailboxFlags(hex: string, flags: string[]): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/flags`, { flags });
+  }
+
+  updateMailboxSubscribed(hex: string, subscribed: boolean): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/subscribed`, { subscribed });
+  }
+
+  updateMailboxParent(hex: string, parent: string): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/parent`, { parent });
+  }
+
+  updateMailboxQuota(hex: string, quota: number): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/quota`, { quota });
+  }
+
+  updateMailboxAcl(hex: string, acl: Record<string, unknown>): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/acl`, { acl });
+  }
+
+  updateMailboxMeta(hex: string, meta: Record<string, unknown>): Promise<MailboxModel> {
+    return this.http.patch<MailboxModel>(`/user/mailbox/${hex}/meta`, { meta });
   }
 
   deleteMailbox(hex: string): Promise<null> {

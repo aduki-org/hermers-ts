@@ -54,12 +54,41 @@ export class UserResource {
     return this.http.patch<User>('/user/avatar', avatar);
   }
 
+  /** Active sessions for the authenticated user (`GET /user/sessions`). */
   activeSessions(query?: ListQuery): Promise<Page<Session>> {
-    return this.http.get<Page<Session>>('/user/sessions/active', { query });
+    return this.http.get<Page<Session>>('/user/sessions', { query });
+  }
+
+  sessionsByMethod(method: string, query?: ListQuery): Promise<Page<Session>> {
+    return this.http.get<Page<Session>>(
+      `/user/sessions/method/${encodeURIComponent(method)}`,
+      { query }
+    );
   }
 
   audits(query?: ListQuery): Promise<Page<Audit>> {
     return this.http.get<Page<Audit>>('/user/audits', { query });
+  }
+
+  auditsByAction(action: string, query?: ListQuery): Promise<Page<Audit>> {
+    return this.http.get<Page<Audit>>(
+      `/user/audits/action/${encodeURIComponent(action)}`,
+      { query }
+    );
+  }
+
+  failedAudits(query?: ListQuery): Promise<Page<Audit>> {
+    return this.http.get<Page<Audit>>('/user/audits/failed', { query });
+  }
+
+  successfulAudits(query?: ListQuery): Promise<Page<Audit>> {
+    return this.http.get<Page<Audit>>('/user/audits/successful', { query });
+  }
+
+  auditsByIp(ip: string, query?: ListQuery): Promise<Page<Audit>> {
+    return this.http.get<Page<Audit>>(`/user/audits/ip/${encodeURIComponent(ip)}`, {
+      query,
+    });
   }
 
   /**

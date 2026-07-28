@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [3.1.0] - 2026-07-28
+
+### Added (`@hermers/sdk`)
+
+- Full API-key REST coverage for previously missing routes (~78): tenant audits/domains/quotas/rules/usage filters, invitations filters, key expired/user/prefix/hash/last, calendar update/delete, feeds update/sync, mail folder unread/flagged + mailbox field patches, user audit/session filters, scheduling active/guests/status.
+- Types: `AuditDetail`, `FeedSync`.
+- Webhooks already complete; docs aligned for `retrieveWebhook` → `WebhookModel` (includes `secret`) vs `detailWebhook` → `WebhookDetail`.
+
+### Fixed (`@hermers/sdk`)
+
+- Sessions list path: `activeSessions` now calls `GET /user/sessions` (was incorrectly `/user/sessions/active`).
+
+### Notes
+
+- `@hermers/grpc` remains **3.0.0** (no gRPC API surface additions in this release).
+
+---
+
 ## [3.0.0] - 2026-07-28
 
 ### Breaking

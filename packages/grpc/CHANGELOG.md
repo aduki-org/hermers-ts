@@ -1,5 +1,9 @@
 # Changelog
 
+## Notes
+
+- **3.1.0** REST release (`@hermers/sdk`) has **no** gRPC API additions; this package stays at **3.0.0**.
+
 ## 3.0.0
 
 - Kept in sync with `@hermers/sdk` **3.0.0** (REST retrieve removals are REST-only; this package still exposes gRPC get-by-hex where the service defines it)

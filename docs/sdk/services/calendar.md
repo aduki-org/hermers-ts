@@ -49,6 +49,14 @@ const created = await hermes.calendar.create({
 
 Adds `etag`, `sync_token`, `user: { hex, name, email }`.
 
+
+## Update & delete
+
+| SDK | HTTP | Body / returns |
+| --- | --- | --- |
+| `update(hex, data)` | `PATCH /user/calendars/{hex}` | `{ name?, description?, color?, timezone? }` → `CalendarCreateResult` `{ hex, etag, sync_token }` |
+| `del(hex)` | `DELETE /user/calendars/{hex}` | empty / `null` |
+
 ## Errors
 
 `{ "error": "…", "message": "…" }` — see [Types](../../types/index.md).

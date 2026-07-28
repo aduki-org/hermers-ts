@@ -1,6 +1,6 @@
 {
   "name": "@hermers/sdk",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Official Hermes REST SDK \u2014 Stripe-style TypeScript client (API key auth)",
   "type": "module",
   "main": "./dist/index.js",

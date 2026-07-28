@@ -263,6 +263,7 @@ export interface ApiKey {
   scopes?: Json;
 }
 
+/** List row — `GET /tenant/webhooks`, `/active`, `/subscribers/{event}`. */
 export interface Webhook {
   hex: string;
   url: string;
@@ -272,11 +273,30 @@ export interface Webhook {
   total?: number;
 }
 
-export interface WebhookDetail extends Webhook {
-  secret?: string;
-  events?: Json;
-  domains?: Json;
-  meta?: Json;
+/** Full model — `GET /tenant/webhooks/{hex}`. */
+export interface WebhookModel {
+  id: number;
+  hex: string;
+  /** Tenant hex string (not nested). */
+  tenant: string;
+  url: string;
+  secret: string;
+  events: (string | null)[];
+  domains: (string | null)[];
+  active: boolean;
+  meta: Json;
+  created: string;
+  updated: string;
+}
+
+/** Detail view — `GET /tenant/webhooks/{hex}/detail` (no secret). */
+export interface WebhookDetail {
+  hex: string;
+  url: string;
+  events: Json;
+  active: boolean;
+  created: string;
+  tenant: HexName;
 }
 
 export interface Audit {
@@ -290,6 +310,20 @@ export interface Audit {
   created: string;
   actor?: HexNameEmail | null;
   total?: number;
+}
+
+/** Tenant audit detail (`GET /tenant/view/audit/{hex}`) — includes optional `meta`. */
+export interface AuditDetail {
+  hex: string;
+  action: string;
+  success: boolean;
+  reason?: string | null;
+  ip?: string | null;
+  agent?: string | null;
+  device?: Json | null;
+  meta?: Json | null;
+  created: string;
+  actor?: Json | null;
 }
 
 export interface Usage {
@@ -484,6 +518,11 @@ export interface Event {
   end?: string | null;
   created: string;
   total?: number;
+}
+
+export interface FeedSync {
+  hex: string;
+  ok: boolean;
 }
 
 export interface Feed {

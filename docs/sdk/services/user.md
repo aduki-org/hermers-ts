@@ -114,7 +114,7 @@ Other sections: freeform jsonb (size/depth validated only).
 
 ## Sessions — `Page<Sessions>`
 
-`GET /user/sessions/active`
+`GET /user/sessions`
 
 | Field | Type | Nullable |
 | --- | --- | --- |
@@ -140,6 +140,21 @@ Other sections: freeform jsonb (size/depth validated only).
 | `total` | number | no |
 
 Note: field is **`actor`**, not `user`.
+
+
+## Sessions & audit filters
+
+| SDK | HTTP | Returns |
+| --- | --- | --- |
+| `activeSessions(query?)` | `GET /user/sessions` | `Page<Session>` |
+| `sessionsByMethod(method, query?)` | `GET /user/sessions/method/{method}` | `Page<Session>` |
+| `audits(query?)` | `GET /user/audits` | `Page<Audit>` |
+| `auditsByAction(action, query?)` | `GET /user/audits/action/{action}` | `Page<Audit>` |
+| `failedAudits(query?)` | `GET /user/audits/failed` | `Page<Audit>` |
+| `successfulAudits(query?)` | `GET /user/audits/successful` | `Page<Audit>` |
+| `auditsByIp(ip, query?)` | `GET /user/audits/ip/{ip}` | `Page<Audit>` |
+
+`activeSessions` hits **`/user/sessions`** (not `/user/sessions/active`).
 
 ## Errors
 

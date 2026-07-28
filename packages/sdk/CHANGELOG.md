@@ -1,5 +1,21 @@
 # Changelog
 
+## 3.1.0
+
+### Added
+
+- Full API-key REST coverage (~78 previously missing routes): tenant audits/domains/quotas/rules/usage/invitations filters, key expired/user/prefix/hash/last, calendar update/delete, feeds update/sync, mail folder + mailbox field patches, user audit/session filters, scheduling active/guests/status.
+- Types: `AuditDetail`, `FeedSync`.
+- Webhooks: full surface documented (`activeWebhooks`, `webhookSubscribers`, `detailWebhook`, field updates).
+
+### Fixed
+
+- `activeSessions` → `GET /user/sessions` (not `/user/sessions/active`).
+
+### Changed
+
+- `retrieveWebhook(hex)` is typed as **`WebhookModel`** (includes `secret`). Use `detailWebhook(hex)` for the nested detail view without secret. Callers that assumed a list-row or detail shape should migrate.
+
 ## 3.0.0
 
 **BREAKING**

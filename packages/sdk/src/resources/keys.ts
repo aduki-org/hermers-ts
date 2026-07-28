@@ -16,12 +16,24 @@ export class KeysResource {
     return this.http.get<Page<ApiKey>>('/tenant/keys', { query });
   }
 
-  listActive(): Promise<Page<ApiKey>> {
-    return this.http.get<Page<ApiKey>>('/tenant/keys/active');
+  listActive(query?: ListQuery): Promise<Page<ApiKey>> {
+    return this.http.get<Page<ApiKey>>('/tenant/keys/active', { query });
+  }
+
+  listExpired(query?: ListQuery): Promise<Page<ApiKey>> {
+    return this.http.get<Page<ApiKey>>('/tenant/keys/expired', { query });
+  }
+
+  listByUser(user: string, query?: ListQuery): Promise<Page<ApiKey>> {
+    return this.http.get<Page<ApiKey>>(`/tenant/keys/user/${user}`, { query });
   }
 
   retrieve(hex: string): Promise<ApiKey> {
     return this.http.get<ApiKey>(`/tenant/keys/${hex}`);
+  }
+
+  lookupPrefix(prefix: string): Promise<ApiKey> {
+    return this.http.post<ApiKey>('/tenant/keys/lookup/prefix', { prefix });
   }
 
   /**
@@ -53,6 +65,14 @@ export class KeysResource {
 
   updateScopes(hex: string, scopes: string[]): Promise<null> {
     return this.http.patch<null>(`/tenant/keys/${hex}/scopes`, { scopes });
+  }
+
+  updateHash(hex: string, hash: string): Promise<{ ok: boolean }> {
+    return this.http.patch<{ ok: boolean }>(`/tenant/keys/${hex}/hash`, { hash });
+  }
+
+  updateLast(hex: string, last: string): Promise<{ ok: boolean }> {
+    return this.http.patch<{ ok: boolean }>(`/tenant/keys/${hex}/last`, { last });
   }
 
   del(hex: string): Promise<null> {

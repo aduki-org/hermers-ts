@@ -216,6 +216,33 @@ Detail adds `privileges`, `message?`, `tenant: { hex, name, slug }`.
 
 Detail adds `scopes` (jsonb). Create HTTP response is `{ "hex": "…" }` only; the SDK returns `{ hex, key }` by keeping the raw secret client-side.
 
+## Webhooks
+
+### List row — `Webhook`
+
+| Field | Type |
+| --- | --- |
+| `hex` / `url` | string |
+| `active` | boolean |
+| `created` | datetime |
+| `tenant` | `{ hex, name }` |
+| `total` | number |
+
+### Model — `WebhookModel` (`GET /tenant/webhooks/{hex}`)
+
+| Field | Type |
+| --- | --- |
+| `id` | number |
+| `hex` / `tenant` / `url` / `secret` | string (`tenant` is hex) |
+| `events` / `domains` | `(string\|null)[]` |
+| `active` | boolean |
+| `meta` | object |
+| `created` / `updated` | datetime |
+
+### Detail — `WebhookDetail` (`GET …/detail`)
+
+`hex`, `url`, `events` (jsonb), `active`, `created`, `tenant: { hex, name }` — no `secret`. Create response is `{ "hex": "…" }`. Field patches / delete return `{ "ok": true }`.
+
 ## Calendar / events / feeds
 
 ### Calendar list — `Calendars`
@@ -293,3 +320,8 @@ Do **not** share one TypeScript interface across transports. Examples:
 | Security status | `policy` / `records` objects | `policyJson` / `recordsJson` strings |
 | Whoami | flat JSON + empty `ip`/`agent` | gRPC `Session` (+ timestamps) |
 | Errors | `{ error, message }` JSON | `HermesGrpcError` status codes |
+
+## New types
+
+- `AuditDetail` — `GET /tenant/view/audit/{hex}` (includes optional `meta`).
+- `FeedSync` — `{ hex, ok }` from `POST /user/feeds/{hex}/sync`.

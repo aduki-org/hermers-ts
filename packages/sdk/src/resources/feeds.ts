@@ -1,5 +1,5 @@
 import type { HttpClient } from '../http/client.js';
-import type { Feed } from '../types/index.js';
+import type { Feed, FeedSync } from '../types/index.js';
 
 export class FeedsResource {
   constructor(private readonly http: HttpClient) {}
@@ -20,6 +20,22 @@ export class FeedsResource {
 
   retrieve(hex: string): Promise<Feed> {
     return this.http.get<Feed>(`/user/feeds/${hex}`);
+  }
+
+  update(
+    hex: string,
+    data: {
+      color?: string;
+      block?: boolean;
+      active?: boolean;
+      name?: string;
+    }
+  ): Promise<Feed> {
+    return this.http.patch<Feed>(`/user/feeds/${hex}`, data);
+  }
+
+  sync(hex: string): Promise<FeedSync> {
+    return this.http.post<FeedSync>(`/user/feeds/${hex}/sync`);
   }
 
   del(hex: string): Promise<void> {

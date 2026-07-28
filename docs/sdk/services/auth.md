@@ -82,6 +82,19 @@ The SDK generates a raw `hm_live_…` key, sends hash+prefix, and returns `{ hex
 
 Detail adds `scopes` (jsonb array/object as stored).
 
+
+## Key filters & patches
+
+| SDK | HTTP | Returns |
+| --- | --- | --- |
+| `listExpired(query?)` | `GET /tenant/keys/expired` | `Page<ApiKey>` |
+| `listByUser(user, query?)` | `GET /tenant/keys/user/{user}` | `Page<ApiKey>` |
+| `lookupPrefix(prefix)` | `POST /tenant/keys/lookup/prefix` `{ prefix }` | `ApiKey` |
+| `updateHash(hex, hash)` | `PATCH /tenant/keys/{hex}/hash` `{ hash }` | `{ ok: true }` / ack |
+| `updateLast(hex, last)` | `PATCH /tenant/keys/{hex}/last` `{ last }` | `{ ok: true }` / ack |
+
+`prefix` max 16 characters. `last` is a datetime string.
+
 ## Errors
 
 ```json

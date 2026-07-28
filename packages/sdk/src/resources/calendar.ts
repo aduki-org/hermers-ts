@@ -21,6 +21,22 @@ export class CalendarResource {
     return this.http.post<CalendarCreateResult>('/user/calendars', data);
   }
 
+  update(
+    hex: string,
+    data: {
+      name?: string;
+      description?: string;
+      color?: string;
+      timezone?: string;
+    }
+  ): Promise<CalendarCreateResult> {
+    return this.http.patch<CalendarCreateResult>(`/user/calendars/${hex}`, data);
+  }
+
+  del(hex: string): Promise<void> {
+    return this.http.delete<void>(`/user/calendars/${hex}`);
+  }
+
   events(query?: ListQuery): Promise<Page<Event>> {
     return this.http.get<Page<Event>>('/user/calendars/events', { query });
   }

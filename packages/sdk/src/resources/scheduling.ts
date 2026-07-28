@@ -42,8 +42,23 @@ export class SchedulingResource {
     return this.http.get<Page<Appointment>>('/user/appointments', { query });
   }
 
+  activeAppointments(query?: ListQuery): Promise<Page<Appointment>> {
+    return this.http.get<Page<Appointment>>('/user/appointments/active', { query });
+  }
+
   retrieveAppointment(hex: string): Promise<Appointment> {
     return this.http.get<Appointment>(`/user/appointments/${hex}`);
+  }
+
+  guests(hex: string): Promise<Guest[]> {
+    return this.http.get<Guest[]>(`/user/appointments/${hex}/guests`);
+  }
+
+  updateAppointmentStatus(
+    hex: string,
+    status: 'confirmed' | 'canceled' | 'completed' | 'no_show' | 'pending'
+  ): Promise<Appointment> {
+    return this.http.patch<Appointment>(`/user/appointments/${hex}/status`, { status });
   }
 
   cancelAppointment(hex: string): Promise<null> {

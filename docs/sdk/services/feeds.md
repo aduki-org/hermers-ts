@@ -67,6 +67,19 @@ const feed = await hermes.feeds.create({
 }
 ```
 
+
+## Update & sync
+
+| SDK | HTTP | Body / returns |
+| --- | --- | --- |
+| `update(hex, data)` | `PATCH /user/feeds/{hex}` | `{ color?, block?, active?, name? }` → `Feed` |
+| `sync(hex)` | `POST /user/feeds/{hex}/sync` | `FeedSync` `{ hex, ok }` |
+
+```ts
+await hermes.feeds.update(hex, { color: '#336699', active: true });
+const { ok } = await hermes.feeds.sync(hex);
+```
+
 ## Errors
 
 `{ "error": "…", "message": "…" }` — see [Types](../../types/index.md).

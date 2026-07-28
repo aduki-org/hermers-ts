@@ -21,6 +21,12 @@ const { hex, key } = await hermes.keys.create({
   name: 'ci',
   scopes: ['contacts:read'],
 });
+
+const hook = await hermes.tenant.createWebhook({
+  url: 'https://api.example.com/hooks',
+  secret: 'whsec_xxxxxxxxxxxxxxxx',
+  events: ['message.sent'],
+});
 ```
 
 Defaults: `BASE_URL === 'https://hermers.aduki.pro/v1'`.
